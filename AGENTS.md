@@ -56,11 +56,11 @@ digraph compass_flow {
 
 `credit`, `earn`, and `tokenized-equities` each act through a per-product **smart account** (a Safe) owned by the user. That account must exist (and, for credit/earn, be funded) before the main action, or it fails. So **before any credit / earn / equities action**:
 
-1. **Check** whether the owner already has that product's account — query the group's `positions` (or `balances`); an empty / "no account" result means it doesn't exist yet.
-2. **If missing, create it** — run the group's `create-account`, then fund it via the group's `transfer` where the group has one.
+1. **Check whether it's deployed on-chain.** These accounts have a **deterministic (counterfactual) address the CLI returns even when nothing is deployed there** — so an address in the output (or a `balances` result) does *not* prove the account exists. Verify deployment: `cast code <account-address> --rpc-url "$RPC_URL"` → empty (`0x`) means it isn't created yet.
+2. **If not deployed, create it** — run the group's `create-account`, then fund it via the group's `transfer` where the group has one.
 3. **Then** run the action.
 
-One-time per owner per product per chain — skip it if the account already exists. Confirm exact command names via `--help` (version-independent). Pure read-only commands (markets, quotes, positions) need no account.
+One-time per owner per product per chain — skip if it's already deployed. ⚠️ Never equate "the CLI returned an `…_account_address`" with "the account exists": that address is predicted from the owner and returned regardless of deployment (it can even hold pre-funded tokens while undeployed). Confirm exact command names via `--help`; pure read-only commands (markets, quotes, positions) need no account.
 
 **Perps (`global-markets-perps`) is different — no product account.** It trades on Hyperliquid, so its one-time setup is `enable-unified-account` + `deposit` USDC (plus `approve-builder-fee` / `ensure-leverage` if needed) — not a `create-account`. See the perps recipe in [recipes](#recipes).
 
@@ -132,7 +132,7 @@ Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-m
 | Prefer `-o toon` or `--jq` for results you feed back to yourself | 30–60% fewer tokens than JSON |
 | `compass` never signs/holds keys/broadcasts | Action output is unsigned (tx / EIP-712) → complete it with the user's key via `cast` (see "Signing & hand-off"); broadcast only after the user confirms |
 | Never put a raw private key on the CLI | `--private-key 0x…` leaks to shell history + `ps` → use `cast`'s `--account` (encrypted keystore) or `--ledger`/`--trezor` |
-| Product account first (credit / earn / equities) | Check the owner's product account exists (group `positions`); if not, `create-account` + fund, then act. **Perps has no product account** — its one-time setup is `enable-unified-account` + `deposit` |
+| Product account first (credit / earn / equities) | The account has a deterministic address the CLI returns **even when undeployed** — check it's actually deployed (`cast code <addr>` → `0x` = not created), don't just trust that an address came back; if undeployed, `create-account` + fund, then act. **Perps has no product account** — one-time `enable-unified-account` + `deposit` |
 
 Full error-recovery table: [error-recovery](#error-recovery). Worked end-to-end recipes: [recipes](#recipes). Signing & broadcasting: [signing](#signing).
 
@@ -186,7 +186,7 @@ Full error-recovery table: [error-recovery](#error-recovery). Worked end-to-end 
 
 These hold regardless of exact names:
 
-**Account prerequisites — check first, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must exist (and, for credit/earn, be funded) first. Before the main action: **check** whether the owner has it (query the group's `positions`/`balances`), and if it doesn't exist yet, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
+**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — the CLI returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
 
 **Multi-action → one bundle.** For any goal needing more than one action (rebalance, move between vaults, swap-then-deposit), use the product's **bundle**-style command (takes an `--actions '[…]'` list) to combine them into a **single atomic transaction**. Don't chain separate signed txs. There is no `rebalance` command — a rebalance *is* a bundle. See [recipes](#recipes).
 
