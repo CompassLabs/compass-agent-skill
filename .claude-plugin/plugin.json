@@ -1,0 +1,26 @@
+{
+  "name": "compass",
+  "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs — installs + sets up the CLI, then translates plain-English intents (lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship) into compass commands. Non-custodial: never signs or holds keys.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Compass Labs",
+    "email": "beka@compasslabs.ai"
+  },
+  "homepage": "https://github.com/CompassLabs/compass-agent-skill",
+  "repository": "https://github.com/CompassLabs/compass-agent-skill",
+  "license": "MIT",
+  "keywords": [
+    "defi",
+    "compass",
+    "aave",
+    "morpho",
+    "vaults",
+    "perps",
+    "tokenized-equities",
+    "gas-sponsorship",
+    "ethereum",
+    "arbitrum",
+    "base",
+    "cli"
+  ]
+}

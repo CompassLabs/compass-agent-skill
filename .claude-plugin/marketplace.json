@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "compass-labs",
+  "description": "Compass Labs DeFi tooling for AI coding agents.",
+  "owner": {
+    "name": "Compass Labs",
+    "email": "beka@compasslabs.ai"
+  },
+  "plugins": [
+    {
+      "name": "compass",
+      "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs: Aave lending/borrowing, Morpho/ERC-4626 vault yield, swaps, perps, tokenized equities, and gas-sponsored transactions on Ethereum, Arbitrum, and Base. Installs and sets up the CLI, then maps plain-English intents to commands.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Compass Labs",
+        "email": "beka@compasslabs.ai"
+      },
+      "category": "development",
+      "homepage": "https://github.com/CompassLabs/compass-agent-skill",
+      "source": "./"
+    }
+  ]
+}

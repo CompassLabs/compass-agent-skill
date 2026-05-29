@@ -1,0 +1,42 @@
+{
+  "name": "compass",
+  "version": "0.1.0",
+  "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Non-custodial.",
+  "author": {
+    "name": "Compass Labs",
+    "email": "beka@compasslabs.ai",
+    "url": "https://compasslabs.ai"
+  },
+  "homepage": "https://github.com/CompassLabs/compass-agent-skill",
+  "repository": "https://github.com/CompassLabs/compass-agent-skill",
+  "license": "MIT",
+  "keywords": [
+    "defi",
+    "compass",
+    "aave",
+    "morpho",
+    "vaults",
+    "perps",
+    "tokenized-equities",
+    "gas-sponsorship",
+    "cli"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Compass DeFi",
+    "shortDescription": "On-chain DeFi via the compass CLI",
+    "longDescription": "Delegate on-chain DeFi to Compass Labs: install and set up the compass CLI, then turn plain-English intents into compass commands for lending/borrowing (Aave), yield (Morpho/ERC-4626 vaults, Pendle), swaps, perps, tokenized equities, and gas-sponsored transactions on Ethereum, Arbitrum, and Base. Non-custodial — returns unsigned transactions for the user's wallet to sign.",
+    "developerName": "Compass Labs",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Find the highest-yield USDC vault on Base and deposit into it.",
+      "Borrow USDC against my ETH."
+    ],
+    "websiteURL": "https://compasslabs.ai"
+  }
+}
