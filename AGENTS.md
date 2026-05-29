@@ -42,6 +42,8 @@ digraph compass_flow {
 }
 ```
 
+> 🖼️ Prefer a picture? A human-friendly version of this flow is in `workflow.excalidraw` (this folder) — open it with VS Code's Excalidraw extension or at excalidraw.com.
+
 **0. Ensure the CLI is ready.** See "Setup" below.
 
 **1. Map intent → command.** The **installed binary is the only source of truth** for command and flag names — they change between versions, so never rely on hardcoded names (including any in this skill). Discover live: `compass --usage` (full command + flag schema in one shot) or `compass <group> --help`. Use [command-catalog](#command-catalog) only to know *which capability area* to look in, then confirm the exact spelling against the binary. Prefer the **single highest-level command** (or one `bundle`) that achieves the user's whole goal — see "Delegate the whole goal" below.
@@ -97,9 +99,10 @@ Check first: `compass version`. If it's missing, **tell the user the exact comma
 - **In the mono repo:** use the local `cli-sdk/compass` binary directly, or `go install github.com/CompassLabs/cli/cmd/compass@latest`.
 - **Standalone (recommended for agents — non-interactive):**
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/CompassLabs/cli/main/scripts/install.sh | bash
+  curl -fsSL https://compasslabs.ai/install.sh | bash      # macOS / Linux
+  iwr -useb https://compasslabs.ai/install.ps1 | iex       # Windows (PowerShell)
   ```
-  Installs to `/usr/local/bin` (may need sudo). To avoid sudo, prefix with `COMPASS_INSTALL_DIR="$HOME/.local/bin"` and make sure that dir is on `PATH`.
+  Installs to `/usr/local/bin`, auto-falling back to `$HOME/.local/bin` if that isn't writable; set `COMPASS_INSTALL_DIR` to force a directory (ensure it's on `PATH`).
 - **Manual:** binaries on the [releases page](https://github.com/CompassLabs/cli/releases).
 
 **Check it's current — this CLI changes fast.** Command names and flags have changed across versions (groups renamed, subcommands restructured), so a stale binary is a top cause of "unknown command/flag" errors. Don't memorize names — read them from the installed binary (step 1), and keep it reasonably current:
@@ -111,7 +114,7 @@ curl -fsSL https://api.github.com/repos/CompassLabs/cli/releases/latest | grep -
 
 If it's behind, offer to update (re-run the installer — it fetches latest — or `go install …@latest`); confirm before installing.
 
-Then authenticate (env var is the most reliable for agents):
+Then authenticate (env var is the most reliable for agents; get a key at <https://compasslabs.ai/login>):
 
 ```bash
 export COMPASS_API_KEY_AUTH=ck_...   # note the _AUTH suffix — NOT COMPASS_API_KEY

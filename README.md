@@ -30,12 +30,29 @@ Point your agent at **`AGENTS.md`** (or `GEMINI.md`) in this repo — it's the s
 
 Or just describe a DeFi action in chat — the skill activates on DeFi intents.
 
+## How it works
+
+```mermaid
+flowchart TD
+    A{"compass installed?"} -->|no| B["Confirm with user, then install"]
+    A -->|yes| C["Map intent → command<br/>(compass --usage / group --help)"]
+    B --> C
+    C --> D["Read the command's flags<br/>(--help or docs)"]
+    D --> E["credit / earn / equities?<br/>ensure account exists first"]
+    E --> F["Preview with --dry-run"]
+    F --> G["Execute"]
+    G --> H{"Output is unsigned tx / EIP-712?"}
+    H -->|yes action| I["Sign with the user's key via cast<br/>(see Signing and hand-off)"]
+    H -->|no read-only| J["Show the result"]
+```
+
 ## Requirements
 
-- **A Compass API key:** `export COMPASS_API_KEY_AUTH=...` (get one at <https://www.compasslabs.ai/dashboard>).
+- **A Compass API key:** `export COMPASS_API_KEY_AUTH=...` (get one at <https://compasslabs.ai/login>).
 - **The `compass` CLI:** the skill installs it on first use, or:
   ```bash
-  curl -fsSL https://raw.githubusercontent.com/CompassLabs/cli/main/scripts/install.sh | bash
+  curl -fsSL https://compasslabs.ai/install.sh | bash      # macOS / Linux
+  iwr -useb https://compasslabs.ai/install.ps1 | iex       # Windows
   # or
   go install github.com/CompassLabs/cli/cmd/compass@latest
   ```
