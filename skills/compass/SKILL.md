@@ -100,6 +100,7 @@ Action commands return something **unsigned**; `compass` never signs, holds keys
 
 Check first: `compass version`. If it's missing, **tell the user the exact command and confirm before running it** (install modifies their system):
 
+- **Homebrew (macOS / Linux, if `brew` is available):** `brew install compasslabs/tap/compass` — non-interactive; update later with `brew upgrade compass`.
 - **In the mono repo:** use the local `cli-sdk/compass` binary directly, or `go install github.com/CompassLabs/cli/cmd/compass@latest`.
 - **Standalone (recommended for agents — non-interactive):**
   ```bash
@@ -116,7 +117,7 @@ compass version                                                          # insta
 curl -fsSL https://api.github.com/repos/CompassLabs/cli/releases/latest | grep -o '"tag_name": *"[^"]*"'   # latest
 ```
 
-If it's behind, offer to update (re-run the installer — it fetches latest — or `go install …@latest`); confirm before installing.
+If it's behind, offer to update (`brew upgrade compass` if installed via Homebrew, otherwise re-run the installer — it fetches latest — or `go install …@latest`); confirm before installing.
 
 Then authenticate (env var is the most reliable for agents; get a key at <https://compasslabs.ai/login>):
 
