@@ -1,0 +1,20 @@
+skills/compass/SKILL.md
+  s_c56cd0c14611e3::t_a30280432c2cf8 103
+  s_c56cd0c14611e3::t_bcf071628e2c4a 120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "58b1726748ede6c656f0d16454aab0196bed2cb3",
+  "prompts": {},
+  "sessions": {
+    "s_c56cd0c14611e3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0cdddb3b-3589-4d14-a853-3b875c507f95",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bekanay <bekanay@Kanays-MacBook-Air.local>"
+    }
+  }
+}
