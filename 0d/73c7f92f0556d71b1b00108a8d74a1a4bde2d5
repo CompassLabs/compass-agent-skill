@@ -1,0 +1,25 @@
+.claude-plugin/plugin.json
+  s_e27fa8349306c6::t_ec4be3c0a97747 4
+.codex-plugin/plugin.json
+  s_e27fa8349306c6::t_5f3fef9f8fdb2e 3
+.cursor-plugin/plugin.json
+  s_e27fa8349306c6::t_f4a3ed85474053 5
+.claude-plugin/marketplace.json
+  s_e27fa8349306c6::t_679ad7c3a5b881 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "0d73c7f92f0556d71b1b00108a8d74a1a4bde2d5",
+  "prompts": {},
+  "sessions": {
+    "s_e27fa8349306c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1618af39-a70f-4d1f-8a0a-44ad23247ef9",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bekanay <beka@compasslabs.ai>"
+    }
+  }
+}
