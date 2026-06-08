@@ -1,0 +1,33 @@
+README.md
+  s_e27fa8349306c6::t_edf4b2ac4860fd 3
+  s_e27fa8349306c6::t_7e5bdf3d424339 25-27
+skills/compass/SKILL.md
+  s_e27fa8349306c6::t_3cd3f1a694a37c 14-15,17,20,22
+  s_e27fa8349306c6::t_fd945bf98a7ee7 3
+  s_e27fa8349306c6::t_055649c390cbc7 16,18-19
+  s_e27fa8349306c6::t_33494ca2fc0917 21
+AGENTS.md
+  s_e27fa8349306c6::t_2af886ccdffae2 17
+  s_e27fa8349306c6::t_4d59eda1a08b1d 10-11,13,16,18
+  s_e27fa8349306c6::t_f99ef875e0fcde 12,14-15
+GEMINI.md
+  s_e27fa8349306c6::t_9cb7d405e0bede 12,14-15
+  s_e27fa8349306c6::t_5c87ab295043db 10-11,13,16,18
+  s_e27fa8349306c6::t_edb6ead0c7416c 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "4ecaf22f75a75b4b7e401047b903be8c474b0b76",
+  "prompts": {},
+  "sessions": {
+    "s_e27fa8349306c6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1618af39-a70f-4d1f-8a0a-44ad23247ef9",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bekanay <bekanay@Kanays-MacBook-Air.local>"
+    }
+  }
+}
