@@ -1,6 +1,6 @@
 # Compass — DeFi skill for AI coding agents
 
-Do on-chain DeFi from your coding agent by delegating to the [Compass Labs](https://compasslabs.ai) DeFi API through the `compass` CLI.
+Do on-chain DeFi from your coding agent by delegating to the [Compass Labs](https://compasslabs.ai) DeFi API through the `compass` CLI or the hosted MCP server.
 
 Describe an action in plain English — _"supply USDC to Aave"_, _"find the best USDC vault on Base and deposit 100"_, _"open a 2x long on ETH"_, _"buy tokenized TSLA"_ — and the agent installs the CLI if needed, finds the right command, previews it, runs it, and hands any resulting transaction to your wallet to sign.
 
@@ -21,6 +21,9 @@ This repo ships `.cursor-plugin/` and `.codex-plugin/` manifests that point at t
 
 ### Any other agent (universal)
 Point your agent at **`AGENTS.md`** (or `GEMINI.md`) in this repo — it's the same guidance in the widely-read AGENTS.md format. Many agents (Codex, Aider, Cline, Gemini CLI, …) pick it up automatically when it's in the working directory.
+
+### MCP server (no CLI install)
+Prefer native tools over a binary? Connect the hosted Compass MCP server — per-client setup and auth are on the install page: <https://app.getgram.ai/mcp/compasslabs-z6ghp/install>. The same skill concepts apply; the agent calls the Compass tools natively instead of shelling out to the CLI.
 
 ## Use
 

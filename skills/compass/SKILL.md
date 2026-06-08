@@ -1,6 +1,6 @@
 ---
 name: compass
-description: Use when a user wants on-chain DeFi actions through Compass Labs — supply or borrow on Aave, earn yield in Morpho/ERC-4626 vaults, swap tokens, open perps, trade tokenized equities/stocks, or send gas-sponsored transactions on Ethereum, Arbitrum, or Base — or when they invoke /compass or mention the compass CLI. Also use to install or set up the compass CLI.
+description: Use when a user wants on-chain DeFi actions through Compass Labs — supply or borrow on Aave, earn yield in Morpho/ERC-4626 vaults, swap tokens, open perps, trade tokenized equities/stocks, or send gas-sponsored transactions on Ethereum, Arbitrum, or Base — or when they invoke /compass or mention the compass CLI or MCP server. Also use to install or set up the compass CLI or connect the Compass MCP server.
 ---
 
 # Compass — on-chain DeFi via the `compass` CLI
@@ -10,6 +10,15 @@ description: Use when a user wants on-chain DeFi actions through Compass Labs �
 `compass` is a thin command-line wrapper over the Compass Labs **non-custodial** DeFi API. Action commands return an **unsigned transaction** (`{to, data, value, chainId}`) or **EIP-712 typed data** — the CLI never holds keys, signs, or broadcasts.
 
 This skill is the "delegate to Compass" flow: install the CLI, translate the user's plain-English DeFi intent into the right command, preview it, run it, and hand any returned transaction to the user's wallet to sign.
+
+## Two ways to use Compass — CLI or MCP
+
+Compass is reachable two ways, and the **concepts** in this skill — create the product account first, prepare→sign→submit, bundle multi-step goals, sign with the user's own key — apply to **both**. **Let the user pick which one to use:**
+
+- **CLI.** Install the `compass` binary and drive it from a shell — any shell-capable agent, with `--dry-run`, `--jq`, `-o toon`, and full flag control. See "Setup" below.
+- **Hosted MCP server.** If the client speaks MCP (Claude Code/Desktop, Cursor, …), connect the Compass MCP server — no binary to install; the Compass tools appear natively and take JSON arguments. Per-client setup + auth: <https://app.getgram.ai/mcp/compasslabs-z6ghp/install>. On connect the server returns its own instructions, and each tool ships a schema — those, not this skill, are the source of truth for MCP tool names and arguments.
+
+**Ask the user which backend to use** the first time you act on a Compass request, then use that for the rest of the session — don't re-ask per command. Only ask when both are genuinely available; if only one is set up (CLI installed, or MCP tools connected), just use that one and mention the other exists. **If the user would rather not be asked** (e.g. "just do it", "don't ask me"), skip the question — default to the MCP tools when connected, else the CLI — do the action, and tell them which you used (they can switch anytime). The CLI-only mechanics here — `--dry-run`, `--jq`, `-o toon`, nested `--a.b.c` flags — don't apply on the MCP path (you pass JSON params and read JSON back), but either way you get back an **unsigned tx / EIP-712 to sign with the user's own key** (see "Signing & hand-off"), and neither the CLI nor the server holds keys.
 
 ## When to use
 
