@@ -23,7 +23,14 @@ This repo ships `.cursor-plugin/` and `.codex-plugin/` manifests that point at t
 Point your agent at **`AGENTS.md`** (or `GEMINI.md`) in this repo — it's the same guidance in the widely-read AGENTS.md format. Many agents (Codex, Aider, Cline, Gemini CLI, …) pick it up automatically when it's in the working directory.
 
 ### MCP server (no CLI install)
-Prefer native tools over a binary? Connect the hosted Compass MCP server — per-client setup and auth are on the install page: <https://app.getgram.ai/mcp/compasslabs-z6ghp/install>. The same skill concepts apply; the agent calls the Compass tools natively instead of shelling out to the CLI.
+Prefer native tools over a binary? The Compass API hosts its own MCP server at `https://api.compasslabs.ai/mcp`. Auth is your regular Compass API key (get one at <https://compasslabs.ai/login>) sent as an `X-API-Key` header — e.g. for Claude Code:
+
+```bash
+claude mcp add --transport http compass https://api.compasslabs.ai/mcp \
+  --header "X-API-Key: YOUR_API_KEY"
+```
+
+Per-client setup (Cursor, Claude Desktop, any Streamable-HTTP client) is in the [MCP server docs](https://docs.compasslabs.ai/v2/Agents/MCP-Server). The same skill concepts apply; the agent calls the Compass tools natively instead of shelling out to the CLI.
 
 ## Use
 
