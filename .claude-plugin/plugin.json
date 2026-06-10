@@ -1,7 +1,7 @@
 {
   "name": "compass",
   "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs — installs + sets up the CLI, then translates plain-English intents (lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship) into compass commands. Non-custodial: never signs or holds keys.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": {
     "name": "Compass Labs",
     "email": "beka@compasslabs.ai"
