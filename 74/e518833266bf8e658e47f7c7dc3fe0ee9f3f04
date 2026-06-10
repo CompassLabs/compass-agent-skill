@@ -1,0 +1,25 @@
+skills/compass/SKILL.md
+  s_e7ef2e7299aa4b::t_603d16547ed98a 19
+AGENTS.md
+  s_e7ef2e7299aa4b::t_1a05616cab03a5 15
+README.md
+  s_e7ef2e7299aa4b::t_eae8c8b175c077 26-33
+GEMINI.md
+  s_e7ef2e7299aa4b::t_4c2ed0bdb515a3 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "74e518833266bf8e658e47f7c7dc3fe0ee9f3f04",
+  "prompts": {},
+  "sessions": {
+    "s_e7ef2e7299aa4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1b817571-0a0c-4f79-a470-ccfd1a55d3d6",
+        "model": "claude-fable-5"
+      },
+      "human_author": "bekanay <beka@compasslabs.ai>"
+    }
+  }
+}
