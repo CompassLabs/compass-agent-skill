@@ -1,0 +1,27 @@
+.claude-plugin/plugin.json
+  s_fd4bd94f071ef1::t_2ef28fa6ef24ee 4
+skills/compass/references/recipes.md
+  s_fd4bd94f071ef1::t_735aebe6d4e44f 42-60
+.claude-plugin/marketplace.json
+  s_fd4bd94f071ef1::t_698a5416034fb2 13
+AGENTS.md
+  s_fd4bd94f071ef1::t_40951ef112abcf 351-369
+GEMINI.md
+  s_fd4bd94f071ef1::t_a67fbbce454414 351-369
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "09cf5313d32dff2869f91dc0875506fadb3194dc",
+  "prompts": {},
+  "sessions": {
+    "s_fd4bd94f071ef1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55882d90-c0c6-4824-9536-8e7572a65f41",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "bekanay <beka@compasslabs.ai>"
+    }
+  }
+}
