@@ -1,7 +1,7 @@
 {
   "name": "compass",
   "version": "0.1.4",
-  "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Non-custodial.",
+  "description": "Drive Compass Labs' non-custodial DeFi API via the compass CLI or the hosted MCP server — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Never signs or holds keys.",
   "author": {
     "name": "Compass Labs",
     "email": "beka@compasslabs.ai",
@@ -19,13 +19,14 @@
     "perps",
     "tokenized-equities",
     "gas-sponsorship",
-    "cli"
+    "cli",
+    "mcp"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Compass DeFi",
-    "shortDescription": "On-chain DeFi via the compass CLI",
-    "longDescription": "Delegate on-chain DeFi to Compass Labs: install and set up the compass CLI, then turn plain-English intents into compass commands for lending/borrowing (Aave), yield (Morpho/ERC-4626 vaults, Pendle), swaps, perps, tokenized equities, and gas-sponsored transactions on Ethereum, Arbitrum, and Base. Non-custodial — returns unsigned transactions for the user's wallet to sign.",
+    "shortDescription": "On-chain DeFi via the compass CLI or MCP server",
+    "longDescription": "Delegate on-chain DeFi to Compass Labs via the compass CLI or the hosted MCP server: turn plain-English intents into ready-to-sign transactions for lending/borrowing (Aave), yield (Morpho/ERC-4626 vaults, Pendle), swaps, perps, tokenized equities, and gas-sponsored transactions on Ethereum, Arbitrum, and Base. Non-custodial — returns unsigned transactions for the user's wallet to sign.",
     "developerName": "Compass Labs",
     "category": "Coding",
     "capabilities": [

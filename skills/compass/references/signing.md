@@ -1,6 +1,6 @@
 # Signing & broadcasting compass output
 
-`compass` is **non-custodial**: every action command returns something **unsigned** — either an **unsigned transaction** `{to, data, value, chainId}` or **EIP-712 typed data**. The CLI never holds keys, signs, or broadcasts. This is how to complete that last step with the **user's own key**, using [Foundry's `cast`](https://book.getfoundry.sh/cast/).
+Compass is **non-custodial**: every action — whether you built it with the **[CLI]** or an **[MCP]** tool — returns something **unsigned**, either an **unsigned transaction** `{to, data, value, chainId}` or **EIP-712 typed data**. Neither surface holds keys, signs, or broadcasts. This is how to complete that last step with the **user's own key**, using [Foundry's `cast`](https://book.getfoundry.sh/cast/) — identical for both backends, except the "second command" for EIP-712 flows (below) is a tool call on MCP rather than a shell command.
 
 > **Keys stay with the user.** Sign from an **encrypted keystore** or a **hardware wallet** — never paste a raw private key on the command line (it leaks into shell history and the `ps` process list). Set a keystore up once:
 > ```bash

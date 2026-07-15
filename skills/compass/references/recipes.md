@@ -1,6 +1,8 @@
 # Compass patterns
 
 > **Patterns, not exact syntax.** Command and flag *names* change between versions — always resolve them from the binary. The blocks below are **illustrative shapes**: angle-bracket placeholders (`<earn-group>`, `<manage-cmd>`) mean "find the real name via `--help`". Flags shown are typical but confirm them too.
+>
+> **[MCP] equivalence.** These recipes are written as CLI commands, but each maps 1:1 to an MCP tool call: the `<group> <command>` is a tool name (e.g. `v2_earn_bundle`) and every `--flag value` / `--flag.nested value` is a JSON field (`{"actions":[…]}`). Same order of operations (read → account → build → sign), same `action_type` bundle bodies — you just pass JSON instead of flags and read JSON back instead of using `--jq` / `-o toon`.
 
 ## The loop for every action
 

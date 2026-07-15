@@ -1,6 +1,6 @@
-# Compass CLI error recovery
+# Compass error recovery (CLI + MCP)
 
-Most first-run failures are flag-parsing or auth, not the API. Diagnose with this table before retrying.
+Most first-run **[CLI]** failures are flag-parsing or auth, not the API — diagnose with the table below. The **[MCP]** surface takes typed JSON, so the flag-parsing classes can't happen; its distinct failure modes are in "[MCP] failure modes" at the end. The `HTTP 4xx/5xx` rows apply to both.
 
 | Symptom | Diagnosis | Fix |
 |---------|-----------|-----|
@@ -32,3 +32,15 @@ compass whoami                  # is auth working?
 compass <group> <cmd> --dry-run …   # what request would this send?
 compass <group> <cmd> --debug …     # full request/response to stderr
 ```
+
+## [MCP] failure modes
+
+The MCP tools take typed JSON, so the flag-quoting / `-o table` classes above can't happen. What does come up:
+
+| Symptom | Diagnosis | Fix |
+|---------|-----------|-----|
+| Tool result truncated / "exceeds maximum tokens" | An unfiltered **read** returned a huge payload (full market catalog, or a balance/positions read on a spam-airdropped account) | Re-call with the tool's filters — `limit`/`offset`, `provider`, `chain`, `asset_symbol`, `search` — to return only the rows you need |
+| `401` | The `X-API-Key` header on the server registration is missing/invalid | Re-add the server with a valid key: `claude mcp add … --header "X-API-Key: …"` |
+| `422` / other `4xx` with a message | Request/domain validation (bad discriminator, thin-liquidity slippage, wrong trade flow…) | Read the `{error, message}` body — it's specific (e.g. "raise slippage_bps", "Wrong trade flow") — and adjust the params |
+| Want to "preview" before running | There's no `--dry-run` on MCP | Action tools return the **unsigned** tx/EIP-712 *without broadcasting* — inspect it before signing; that is the preview |
+| A tool name from this skill isn't listed | Tool names track the live API and can be renamed | Trust the actually-connected tool list + the server's on-connect instructions |

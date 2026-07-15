@@ -1,11 +1,11 @@
 
-# Compass — on-chain DeFi via the `compass` CLI
+# Compass — on-chain DeFi via the `compass` CLI or MCP server
 
 ## Overview
 
-`compass` is a thin command-line wrapper over the Compass Labs **non-custodial** DeFi API. Action commands return an **unsigned transaction** (`{to, data, value, chainId}`) or **EIP-712 typed data** — the CLI never holds keys, signs, or broadcasts.
+Compass Labs exposes a **non-custodial** DeFi API through two equally-supported surfaces: the **`compass` CLI** (a shell binary) and a **hosted MCP server** (native agent tools over one URL). Whichever you use, action commands/tools return an **unsigned transaction** (`{to, data, value, chainId}`) or **EIP-712 typed data** — Compass never holds keys, signs, or broadcasts.
 
-This skill is the "delegate to Compass" flow: install the CLI, translate the user's plain-English DeFi intent into the right command, preview it, run it, and hand any returned transaction to the user's wallet to sign.
+This skill is the "delegate to Compass" flow: set up whichever backend fits the client, translate the user's plain-English DeFi intent into the right command **or tool call**, preview it, run it, and hand any returned transaction to the user's wallet to sign. Everything below — the workflow, product-account rules, goal-bundling, and signing — is **identical on both backends**; only the surface differs (shell flags vs JSON params). Backend-specific mechanics are tagged **[CLI]** or **[MCP]**.
 
 ## Two ways to use Compass — CLI or MCP
 
@@ -19,7 +19,7 @@ Compass is reachable two ways, and the **concepts** in this skill — create the
 ## When to use
 
 - User wants a DeFi action: "supply USDC to Aave", "find the best USDC vault and deposit", "borrow against my ETH", "swap X for Y", "open a 2x long on ETH", "buy tokenized TSLA", "withdraw my position".
-- User invokes `/compass <intent>` or mentions the `compass` CLI.
+- User invokes `/compass <intent>` or mentions the `compass` CLI **or the Compass MCP tools**.
 - User asks portfolio / risk questions answerable from Compass market data (see `compass risk-recipes`).
 - **Not for:** custodying keys (the *user's* key signs — see Signing & hand-off), price charts, or chains/protocols Compass doesn't support.
 
@@ -27,41 +27,49 @@ Compass is reachable two ways, and the **concepts** in this skill — create the
 
 ```dot
 digraph compass_flow {
-    "compass installed?" [shape=diamond];
-    "Confirm with user, then install" [shape=box];
-    "Map intent -> command\n(compass --usage / <group> --help)" [shape=box];
-    "Read the command's flags\n(--help or docs)" [shape=box];
+    "Backend ready?\n(CLI installed or MCP connected)" [shape=diamond];
+    "Set up a backend\n(install CLI / add MCP server)" [shape=box];
+    "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" [shape=box];
+    "Read the params\n([CLI] --help flags  [MCP] JSON schema)" [shape=box];
     "credit/earn/equities?\nensure account exists first" [shape=box];
-    "Preview with --dry-run" [shape=box];
+    "Preview\n([CLI] --dry-run  [MCP] inspect built tx)" [shape=box];
     "Execute" [shape=box];
     "Output is unsigned tx / EIP-712?" [shape=diamond];
-    "Sign with the user's key via cast\n(see Signing & hand-off)" [shape=box];
+    "Sign with the user's key\n(see Signing & hand-off)" [shape=box];
     "Show the result" [shape=box];
 
-    "compass installed?" -> "Confirm with user, then install" [label="no"];
-    "compass installed?" -> "Map intent -> command\n(compass --usage / <group> --help)" [label="yes"];
-    "Confirm with user, then install" -> "Map intent -> command\n(compass --usage / <group> --help)";
-    "Map intent -> command\n(compass --usage / <group> --help)" -> "Read the command's flags\n(--help or docs)";
-    "Read the command's flags\n(--help or docs)" -> "credit/earn/equities?\nensure account exists first";
-    "credit/earn/equities?\nensure account exists first" -> "Preview with --dry-run";
-    "Preview with --dry-run" -> "Execute";
+    "Backend ready?\n(CLI installed or MCP connected)" -> "Set up a backend\n(install CLI / add MCP server)" [label="no"];
+    "Backend ready?\n(CLI installed or MCP connected)" -> "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" [label="yes"];
+    "Set up a backend\n(install CLI / add MCP server)" -> "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)";
+    "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" -> "Read the params\n([CLI] --help flags  [MCP] JSON schema)";
+    "Read the params\n([CLI] --help flags  [MCP] JSON schema)" -> "credit/earn/equities?\nensure account exists first";
+    "credit/earn/equities?\nensure account exists first" -> "Preview\n([CLI] --dry-run  [MCP] inspect built tx)";
+    "Preview\n([CLI] --dry-run  [MCP] inspect built tx)" -> "Execute";
     "Execute" -> "Output is unsigned tx / EIP-712?";
-    "Output is unsigned tx / EIP-712?" -> "Sign with the user's key via cast\n(see Signing & hand-off)" [label="yes (action)"];
+    "Output is unsigned tx / EIP-712?" -> "Sign with the user's key\n(see Signing & hand-off)" [label="yes (action)"];
     "Output is unsigned tx / EIP-712?" -> "Show the result" [label="no (read-only)"];
 }
 ```
 
 > 🖼️ Prefer a picture? A human-friendly version of this flow is in `workflow.excalidraw` (this folder) — open it with VS Code's Excalidraw extension or at excalidraw.com.
 
-**0. Ensure the CLI is ready.** See "Setup" below.
+**0. Ensure a backend is ready.** Either the `compass` CLI is installed **or** the Compass MCP tools are connected — see "Setup" below. If both are available, pick one (per "Two ways" above) and stay on it for the session.
 
-**1. Map intent → command.** The **installed binary is the only source of truth** for command and flag names — they change between versions, so never rely on hardcoded names (including any in this skill). Discover live: `compass --usage` (full command + flag schema in one shot) or `compass <group> --help`. Use [command-catalog](#command-catalog) only to know *which capability area* to look in, then confirm the exact spelling against the binary. Prefer the **single highest-level command** (or one `bundle`) that achieves the user's whole goal — see "Delegate the whole goal" below.
+**1. Map intent → command / tool.** The **live surface is the only source of truth** for names — they change between versions, so never rely on hardcoded names (including any in this skill). Use [command-catalog](#command-catalog) only to know *which capability area* to look in, then confirm the exact spelling against the live surface.
+   - **[CLI]** `compass --usage` (every command + flag in one shot) or `compass <group> --help`.
+   - **[MCP]** the connected tool list and each tool's schema (tool names mirror the API operation ids, e.g. `v2_earn_vaults`, `v2_credit_borrow`).
 
-**2. Read the command's flags before composing.** `compass <group> <command> --help`, or in the mono repo `cli-sdk/docs/compass_<group>_<command>.md`. Flags are often **nested** (`--venue.vault.vault-address`, not `--vault-address`). **Never infer flag names from the endpoint or API URL** — this is the #1 cause of failed first runs.
+   Prefer the **single highest-level command/tool** (or one `bundle`) that achieves the user's whole goal — see "Delegate the whole goal" below.
 
-**3. Preview with `--dry-run`.** Prints the exact request (URL, headers, body) to stderr without calling the API. Verify the shape before spending a call.
+**2. Read the params before composing.** **Never infer names from the endpoint or API URL** — the #1 cause of failed first runs on either backend.
+   - **[CLI]** `compass <group> <command> --help` (or in the mono repo `cli-sdk/docs/compass_<group>_<command>.md`). Flags are often **nested**: `--venue.vault.vault-address`, not `--vault-address`.
+   - **[MCP]** the tool's JSON schema. Objects nest the same way: `"venue": {"type":"VAULT","vault_address":"0x…"}`.
 
-**4. Execute, then sign.** Run the command. Read-only results (markets, positions, balances) you show or summarize directly. If the result is **unsigned** — a transaction or EIP-712 typed data — complete it with the **user's own key**; see **Signing & hand-off** below. `compass` itself never signs or broadcasts.
+**3. Preview before you spend a call.**
+   - **[CLI]** `--dry-run` prints the exact request (URL, headers, body) to stderr without calling the API.
+   - **[MCP]** there's no dry-run, but action tools **return the unsigned tx / EIP-712 without broadcasting** — inspect what came back and confirm it matches intent before signing. Same safety, different mechanism.
+
+**4. Execute, then sign.** Run the command/tool. Read-only results (markets, positions, balances) you show or summarize directly. If the result is **unsigned** — a transaction or EIP-712 typed data — complete it with the **user's own key**; see **Signing & hand-off** below. Compass never signs or broadcasts, on either backend.
 
 ## Account-based products — ensure the account exists first
 
@@ -87,24 +95,40 @@ Why: one signature, atomic execution (no half-done state if a later step fails),
 
 ## Signing & hand-off — completing an action
 
-Action commands return something **unsigned**; `compass` never signs, holds keys, or broadcasts. Complete it with the **user's own key** via [`cast`](https://book.getfoundry.sh/cast/) — full guide in [signing](#signing). Two cases:
+Action commands **and MCP action tools** both return something **unsigned** — Compass never signs, holds keys, or broadcasts on either surface. Complete it with the **user's own key** via [`cast`](https://book.getfoundry.sh/cast/) — full guide in [signing](#signing). The two cases are the same whichever backend produced the payload:
 
 - **Unsigned transaction** `{to, data, value, chainId}` (deposit, borrow, manage, bundle…) → sign + broadcast. Pass the `data` hex in the `[SIG]` slot — `cast` takes raw calldata there:
   ```bash
   cast send <to> <data> --value <value> --rpc-url "$RPC_URL" --account <keystore>
   ```
   Default to **sign-only** (`cast mktx` → hand back the signed tx, or `cast publish` it) and **broadcast only after the user confirms** — it spends funds irreversibly.
-- **EIP-712 typed data** (perps/equities orders, gas-sponsorship) → sign off-chain, feed the signature to the **second** compass command:
+- **EIP-712 typed data** (perps/equities orders, gas-sponsorship) → sign off-chain, feed the signature to the **second** compass command/tool (e.g. the perps `…_execute` or tokenized `…_order_submit` tool on MCP):
   ```bash
   cast wallet sign --data --from-file td.json --account <keystore>    # → 0x<sig>, then: compass … execute --signature 0x<sig>
   ```
 
 **Keys stay with the user:** sign from an encrypted keystore (`cast wallet import <name>`) or `--ledger`/`--trezor` — never `--private-key` inline (it leaks to shell history and `ps`).
 
-## Setup (do once)
+## Setup (do once) — pick a backend
+
+Both backends use the **same Compass API key** (get one at <https://compasslabs.ai/login>). If the client speaks MCP, the server is the zero-install path; otherwise use the CLI. Set up **one**.
+
+### [MCP] Connect the hosted server (nothing to install)
+
+The Compass API hosts an MCP server at `https://api.compasslabs.ai/mcp` (Streamable HTTP). Auth is the API key as an **`X-API-Key` header** — no env var, no binary. For Claude Code:
+
+```bash
+claude mcp add --transport http compass https://api.compasslabs.ai/mcp \
+  --header "X-API-Key: YOUR_API_KEY"
+```
+
+Per-client setup (Cursor, Claude Desktop, any Streamable-HTTP client): <https://docs.compasslabs.ai/v2/Agents/MCP-Server>. On connect the server returns its own usage instructions and each tool ships a schema — **those are the source of truth for MCP tool names/args**, not this skill. If the tools are already connected there's nothing to do; a `401` means the `X-API-Key` header is missing or wrong.
+
+### [CLI] Install the binary
 
 Check first: `compass version`. If it's missing, **tell the user the exact command and confirm before running it** (install modifies their system):
 
+- **Homebrew (macOS / Linux, if `brew` is available):** `brew install compasslabs/tap/compass` — non-interactive; update later with `brew upgrade compass`.
 - **In the mono repo:** use the local `cli-sdk/compass` binary directly, or `go install github.com/CompassLabs/cli/cmd/compass@latest`.
 - **Standalone (recommended for agents — non-interactive):**
   ```bash
@@ -121,9 +145,9 @@ compass version                                                          # insta
 curl -fsSL https://api.github.com/repos/CompassLabs/cli/releases/latest | grep -o '"tag_name": *"[^"]*"'   # latest
 ```
 
-If it's behind, offer to update (re-run the installer — it fetches latest — or `go install …@latest`); confirm before installing.
+If it's behind, offer to update (`brew upgrade compass` if installed via Homebrew, otherwise re-run the installer — it fetches latest — or `go install …@latest`); confirm before installing.
 
-Then authenticate (env var is the most reliable for agents; get a key at <https://compasslabs.ai/login>):
+Then authenticate (env var is the most reliable for agents):
 
 ```bash
 export COMPASS_API_KEY_AUTH=ck_...   # note the _AUTH suffix — NOT COMPASS_API_KEY
@@ -134,21 +158,39 @@ Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-m
 
 ## Critical rules — internalize before composing any command
 
+**Universal (both backends):**
+
 | Rule | Why it matters |
 |------|----------------|
-| Auth env var is `COMPASS_API_KEY_AUTH` | `COMPASS_API_KEY` is silently ignored → 401 |
-| Pass **plain** values; read enum options from `--help` (e.g. `--chain base`) | Recent builds accept plain values directly. **Only** if an *optional* string flag errors with `unmarshalling json response body` (older CLI versions) do you JSON-quote that one flag: `--chain '"base"'` |
+| A Compass API key is required | **[CLI]** env var `COMPASS_API_KEY_AUTH` (the `_AUTH` suffix matters — plain `COMPASS_API_KEY` is silently ignored). **[MCP]** the `X-API-Key` header on the server registration. Either way, missing/wrong → 401 |
+| Compass never signs / holds keys / broadcasts | Action output is unsigned (tx / EIP-712) → complete it with the user's key via `cast` (see "Signing & hand-off"); broadcast only after the user confirms |
+| Product account first (credit / earn / equities) | The account has a deterministic address Compass returns **even when undeployed** — check it's actually deployed (`cast code <addr>` → `0x` = not created), don't just trust that an address came back; if undeployed, `create-account` + fund, then act. **Perps has no product account** — one-time `enable-unified-account` + `deposit` |
+| Amounts are decimal token units | `"1.5"` = 1.5 USDC, never wei; `"ALL"` is unsupported — pass an explicit amount |
+| Surface `4xx` bodies to the user | They're actionable (`Unknown token symbol`, `Slippage exceeded — raise slippage`, …); a `5xx` is safe to retry once |
+
+**[CLI] only** — shell-surface mechanics; ignore on MCP, where you pass JSON and read JSON:
+
+| Rule | Why it matters |
+|------|----------------|
+| Pass **plain** values; read enum options from `--help` (e.g. `--chain base`) | Recent builds accept plain values. **Only** if an *optional* string flag errors with `unmarshalling json response body` (older CLI) do you JSON-quote that one flag: `--chain '"base"'` |
 | Never quote required/enum flags | `--borrow-token '"USDC"'` sends literal `"USDC"` → "Unknown token symbol" 422 |
 | Read the flag **Description**, ignore the metavar | Metavars like `--amount from_token` are generator noise, not syntax |
 | `-o table` does **not** unwrap list envelopes | Use `--jq '.vaults'` to drill into `{total, …, vaults:[…]}` |
 | Prefer `-o toon` or `--jq` for results you feed back to yourself | 30–60% fewer tokens than JSON |
-| `compass` never signs/holds keys/broadcasts | Action output is unsigned (tx / EIP-712) → complete it with the user's key via `cast` (see "Signing & hand-off"); broadcast only after the user confirms |
 | Never put a raw private key on the CLI | `--private-key 0x…` leaks to shell history + `ps` → use `cast`'s `--account` (encrypted keystore) or `--ledger`/`--trezor` |
-| Product account first (credit / earn / equities) | The account has a deterministic address the CLI returns **even when undeployed** — check it's actually deployed (`cast code <addr>` → `0x` = not created), don't just trust that an address came back; if undeployed, `create-account` + fund, then act. **Perps has no product account** — one-time `enable-unified-account` + `deposit` |
+
+**[MCP] only:**
+
+| Rule | Why it matters |
+|------|----------------|
+| Scope big **read** tools — some return very large payloads | Unfiltered list/balance reads (e.g. the full tokenized-assets market list, or credit/earn balances on a spam-airdropped account) can exceed the client's tool-result token cap. Pass the tool's filters (`limit`/`offset`, `provider`, `chain`, `asset_symbol`, `search`) — don't fetch the whole catalog to read one row |
+| Tool schemas + on-connect instructions are the source of truth | They mirror the live API — follow them over any tool name written in this skill |
 
 Full error-recovery table: [error-recovery](#error-recovery). Worked end-to-end recipes: [recipes](#recipes). Signing & broadcasting: [signing](#signing).
 
-## Quick reference
+## Quick reference — [CLI] flags
+
+These are CLI-surface conveniences. On **[MCP]** you pass JSON params and read JSON back, so they don't apply — the equivalent of `--dry-run`/`--jq`/`-o toon` is simply reading (and filtering your request to) the tool's JSON result.
 
 | Goal | Flag |
 |------|------|
@@ -166,19 +208,18 @@ Full error-recovery table: [error-recovery](#error-recovery). Worked end-to-end 
 
 # Compass capability map
 
-> **Names are version-specific — this maps *what Compass can do* to *where to look*, not exact syntax.** Get the real group names, subcommands, and flags from the binary:
-> - `compass --help` — the product groups this version has
-> - `compass <group> --help` — that group's subcommands
-> - `compass --usage` — every command + flag in one shot
+> **Names are version-specific — this maps *what Compass can do* to *where to look*, not exact syntax.** Get the real names from the live surface:
+> - **[CLI]** `compass --help` (product groups) · `compass <group> --help` (its subcommands) · `compass --usage` (every command + flag in one shot)
+> - **[MCP]** the connected tool list + each tool's JSON schema (tool names mirror the API operation ids, e.g. `v2_earn_vaults`)
 >
-> Treat every name below as a **pointer**, not gospel. Groups and subcommands have been renamed and restructured across releases.
+> Treat every name below as a **pointer**, not gospel. Groups, subcommands, and tool names have been renamed and restructured across releases.
 
-## How to go from intent to a command
+## How to go from intent to a command / tool
 
-1. `compass --help` → see this version's product groups.
-2. Pick the group matching the user's intent (table below).
-3. `compass <group> --help` → list its commands; pick the action.
-4. `compass <group> <command> --help` → exact flags (watch for nested `--a.b.c`).
+1. Enumerate the surface — **[CLI]** `compass --help`; **[MCP]** the connected tool list.
+2. Pick the group / tool family matching the user's intent (table below).
+3. List the actions — **[CLI]** `compass <group> --help`; **[MCP]** the tools in that family (e.g. `v2_credit_*`).
+4. Read the params — **[CLI]** `compass <group> <command> --help` (nested `--a.b.c`); **[MCP]** the tool's JSON schema (nested objects).
 
 ## Intent → capability area
 
@@ -198,7 +239,7 @@ Full error-recovery table: [error-recovery](#error-recovery). Worked end-to-end 
 
 These hold regardless of exact names:
 
-**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — the CLI returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
+**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — Compass returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
 
 **Multi-action → one bundle.** For any goal needing more than one action (rebalance, move between vaults, swap-then-deposit), use the product's **bundle**-style command (takes an `--actions '[…]'` list) to combine them into a **single atomic transaction**. Don't chain separate signed txs. There is no `rebalance` command — a rebalance *is* a bundle. See [recipes](#recipes).
 
@@ -214,9 +255,9 @@ These hold regardless of exact names:
 
 <a id="error-recovery"></a>
 
-# Compass CLI error recovery
+# Compass error recovery (CLI + MCP)
 
-Most first-run failures are flag-parsing or auth, not the API. Diagnose with this table before retrying.
+Most first-run **[CLI]** failures are flag-parsing or auth, not the API — diagnose with the table below. The **[MCP]** surface takes typed JSON, so the flag-parsing classes can't happen; its distinct failure modes are in "[MCP] failure modes" at the end. The `HTTP 4xx/5xx` rows apply to both.
 
 | Symptom | Diagnosis | Fix |
 |---------|-----------|-----|
@@ -249,6 +290,18 @@ compass <group> <cmd> --dry-run …   # what request would this send?
 compass <group> <cmd> --debug …     # full request/response to stderr
 ```
 
+## [MCP] failure modes
+
+The MCP tools take typed JSON, so the flag-quoting / `-o table` classes above can't happen. What does come up:
+
+| Symptom | Diagnosis | Fix |
+|---------|-----------|-----|
+| Tool result truncated / "exceeds maximum tokens" | An unfiltered **read** returned a huge payload (full market catalog, or a balance/positions read on a spam-airdropped account) | Re-call with the tool's filters — `limit`/`offset`, `provider`, `chain`, `asset_symbol`, `search` — to return only the rows you need |
+| `401` | The `X-API-Key` header on the server registration is missing/invalid | Re-add the server with a valid key: `claude mcp add … --header "X-API-Key: …"` |
+| `422` / other `4xx` with a message | Request/domain validation (bad discriminator, thin-liquidity slippage, wrong trade flow…) | Read the `{error, message}` body — it's specific (e.g. "raise slippage_bps", "Wrong trade flow") — and adjust the params |
+| Want to "preview" before running | There's no `--dry-run` on MCP | Action tools return the **unsigned** tx/EIP-712 *without broadcasting* — inspect it before signing; that is the preview |
+| A tool name from this skill isn't listed | Tool names track the live API and can be renamed | Trust the actually-connected tool list + the server's on-connect instructions |
+
 
 ---
 
@@ -257,6 +310,8 @@ compass <group> <cmd> --debug …     # full request/response to stderr
 # Compass patterns
 
 > **Patterns, not exact syntax.** Command and flag *names* change between versions — always resolve them from the binary. The blocks below are **illustrative shapes**: angle-bracket placeholders (`<earn-group>`, `<manage-cmd>`) mean "find the real name via `--help`". Flags shown are typical but confirm them too.
+>
+> **[MCP] equivalence.** These recipes are written as CLI commands, but each maps 1:1 to an MCP tool call: the `<group> <command>` is a tool name (e.g. `v2_earn_bundle`) and every `--flag value` / `--flag.nested value` is a JSON field (`{"actions":[…]}`). Same order of operations (read → account → build → sign), same `action_type` bundle bodies — you just pass JSON instead of flags and read JSON back instead of using `--jq` / `-o toon`.
 
 ## The loop for every action
 
@@ -317,7 +372,7 @@ Add the gas-sponsorship flag to an action to get EIP-712 instead of a tx → use
 
 # Signing & broadcasting compass output
 
-`compass` is **non-custodial**: every action command returns something **unsigned** — either an **unsigned transaction** `{to, data, value, chainId}` or **EIP-712 typed data**. The CLI never holds keys, signs, or broadcasts. This is how to complete that last step with the **user's own key**, using [Foundry's `cast`](https://book.getfoundry.sh/cast/).
+Compass is **non-custodial**: every action — whether you built it with the **[CLI]** or an **[MCP]** tool — returns something **unsigned**, either an **unsigned transaction** `{to, data, value, chainId}` or **EIP-712 typed data**. Neither surface holds keys, signs, or broadcasts. This is how to complete that last step with the **user's own key**, using [Foundry's `cast`](https://book.getfoundry.sh/cast/) — identical for both backends, except the "second command" for EIP-712 flows (below) is a tool call on MCP rather than a shell command.
 
 > **Keys stay with the user.** Sign from an **encrypted keystore** or a **hardware wallet** — never paste a raw private key on the command line (it leaks into shell history and the `ps` process list). Set a keystore up once:
 > ```bash
