@@ -1,18 +1,17 @@
 # Compass capability map
 
-> **Names are version-specific — this maps *what Compass can do* to *where to look*, not exact syntax.** Get the real group names, subcommands, and flags from the binary:
-> - `compass --help` — the product groups this version has
-> - `compass <group> --help` — that group's subcommands
-> - `compass --usage` — every command + flag in one shot
+> **Names are version-specific — this maps *what Compass can do* to *where to look*, not exact syntax.** Get the real names from the live surface:
+> - **[CLI]** `compass --help` (product groups) · `compass <group> --help` (its subcommands) · `compass --usage` (every command + flag in one shot)
+> - **[MCP]** the connected tool list + each tool's JSON schema (tool names mirror the API operation ids, e.g. `v2_earn_vaults`)
 >
-> Treat every name below as a **pointer**, not gospel. Groups and subcommands have been renamed and restructured across releases.
+> Treat every name below as a **pointer**, not gospel. Groups, subcommands, and tool names have been renamed and restructured across releases.
 
-## How to go from intent to a command
+## How to go from intent to a command / tool
 
-1. `compass --help` → see this version's product groups.
-2. Pick the group matching the user's intent (table below).
-3. `compass <group> --help` → list its commands; pick the action.
-4. `compass <group> <command> --help` → exact flags (watch for nested `--a.b.c`).
+1. Enumerate the surface — **[CLI]** `compass --help`; **[MCP]** the connected tool list.
+2. Pick the group / tool family matching the user's intent (table below).
+3. List the actions — **[CLI]** `compass <group> --help`; **[MCP]** the tools in that family (e.g. `v2_credit_*`).
+4. Read the params — **[CLI]** `compass <group> <command> --help` (nested `--a.b.c`); **[MCP]** the tool's JSON schema (nested objects).
 
 ## Intent → capability area
 
@@ -32,7 +31,7 @@
 
 These hold regardless of exact names:
 
-**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — the CLI returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
+**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — Compass returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
 
 **Multi-action → one bundle.** For any goal needing more than one action (rebalance, move between vaults, swap-then-deposit), use the product's **bundle**-style command (takes an `--actions '[…]'` list) to combine them into a **single atomic transaction**. Don't chain separate signed txs. There is no `rebalance` command — a rebalance *is* a bundle. See `recipes.md`.
 

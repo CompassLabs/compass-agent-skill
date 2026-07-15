@@ -1,7 +1,7 @@
 {
   "name": "compass",
   "displayName": "Compass DeFi",
-  "description": "Drive the compass CLI to do on-chain DeFi via Compass Labs — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Non-custodial.",
+  "description": "Drive Compass Labs' non-custodial DeFi API via the compass CLI or the hosted MCP server — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Never signs or holds keys.",
   "version": "0.1.4",
   "author": {
     "name": "Compass Labs",
@@ -19,7 +19,8 @@
     "perps",
     "tokenized-equities",
     "gas-sponsorship",
-    "cli"
+    "cli",
+    "mcp"
   ],
   "skills": "./skills/"
 }
