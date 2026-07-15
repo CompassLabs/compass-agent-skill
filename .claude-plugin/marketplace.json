@@ -10,7 +10,7 @@
     {
       "name": "compass",
       "description": "Drive Compass Labs' non-custodial DeFi API via the compass CLI or the hosted MCP server: Aave lending/borrowing, Morpho/ERC-4626 vault yield, swaps, perps, tokenized equities, and gas-sponsored transactions on Ethereum, Arbitrum, and Base. Maps plain-English intents to ready-to-sign transactions.",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "author": {
         "name": "Compass Labs",
         "email": "beka@compasslabs.ai"

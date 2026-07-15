@@ -348,6 +348,25 @@ compass <earn-group> <bundle> --owner 0x<o> --chain base --actions '[
 ## Borrow / repay (credit)
 Inputs: owner, chain, collateral token, borrow/repay token, amount. Prereq: a Credit Account (create + fund). Combine e.g. borrow+swap or repay+withdraw atomically with the credit bundle command. Each action returns an unsigned tx.
 
+## Leverage — loop / unloop (credit)  ⭐
+Open a leveraged position in ONE tx: the loop command supplies your initial collateral, then borrows → swaps → re-supplies for several iterations to reach a target leverage. Unloop reverses it. Prereq: a Credit Account already holding the initial collateral (create + fund first).
+
+- **Protocol.** The same loop/unloop commands cover Aave (default), Morpho (needs the market's `market-id`), and Euler. Euler positions are keyed by an **EVK vault pair** (a collateral vault + a borrow vault, from the euler-markets listing) plus an optional **sub-account** id (0–255) that isolates each position with its own health — pass those extra flags only for Euler. Confirm the exact flag names via `--help`.
+- **Sizing.** Give the initial collateral amount (already in the account) plus a target: a **multiplier** (total exposure = multiplier × initial) and/or a per-iteration **loan-to-value** expressed **in percent** and kept under the market's max borrow LTV. The response `preview` reports the achieved multiplier, projected LTV, and health factor before you sign.
+- **Embedded swap → broadcast promptly.** Every iteration swaps the borrowed token back to collateral at a *live* quote, so the returned tx carries a min-out that goes stale within seconds. Broadcast right after building, and give the swap room with a max-slippage of ~1% — a tight 0.5% often misses min-out and reverts the whole atomic tx.
+- **Closing (unloop).** Omit the target-multiplier for a **full unwind** — debt is cleared exactly (accrued interest included) and all pair collateral is withdrawn back to the account; pass `1` to clear debt but leave collateral supplied, or a value `>1` to delever partway. A near-liquidation position that can't unwind in one tx takes an allow-partial flag, then a second unloop from lower leverage.
+- **Reading it back.** Open loops show in the credit **positions** command (Euler reports per-sub-account health). The dedicated **looped-positions** command is Aave/Morpho-only — an Euler loop returns `[]` there, so read Euler leverage from positions instead.
+
+```bash
+# illustrative — confirm names/flags via --help; broadcast promptly (live swap quote)
+compass <credit-group> loop --owner 0x<o> --chain base --collateral-token USDC --borrow-token WETH \
+  --initial-collateral-amount 10 --multiplier 2 --loan-to-value 70 --max-slippage-percent 1
+  # Euler also needs: --collateral-vault 0x<c> --borrow-vault 0x<b> --sub-account-id <n>
+compass <credit-group> unloop --owner 0x<o> --chain base --collateral-token USDC --borrow-token WETH \
+  --max-slippage-percent 1            # omit target-multiplier → full close (Euler: same vault pair + sub-account)
+```
+Each returns an unsigned tx → sign + broadcast with the user's key (see [signing](#signing)).
+
 ## Perps order — prepare → sign → execute
 One-time: enable the perps account, deposit USDC (and approve a builder fee if you'll use one). Then an order command (market/limit) **prepares** EIP-712 → user signs → submit via the perps **`execute`** command. Order inputs: owner, asset ticker (e.g. `AAPL`), side (`buy`/`sell`), size, optional slippage. Read-only: opportunities, positions, candles, activity.
 ```bash
