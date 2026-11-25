@@ -2,7 +2,7 @@
   "name": "compass",
   "displayName": "Compass DeFi",
   "description": "Drive Compass Labs' non-custodial DeFi API via the compass CLI or the hosted MCP server — lend, borrow, earn yield, swap, perps, tokenized equities, gas sponsorship. Never signs or holds keys.",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "author": {
     "name": "Compass Labs",
     "email": "beka@compasslabs.ai"

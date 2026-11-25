@@ -11,10 +11,10 @@ compass --help                          # which product groups exist
 compass <group> --help                  # which command does the action
 compass <group> <command> --help        # exact flags (watch for nested --a.b.c)
 compass <group> <command> … --dry-run   # verify the request shape, no API call
-compass <group> <command> …             # run → sign the unsigned tx / EIP-712 with the user's key (see signing.md)
+compass <group> <command> …             # run → the user signs the unsigned tx / EIP-712 (see signing.md)
 ```
 
-Pass plain values by default; JSON-quote a single flag only if it errors with `unmarshalling json response body` (older versions). Read-only results you show directly; action results (unsigned tx / EIP-712) go to the user's wallet — the CLI never signs. How to actually sign (the `cast` commands for each output type) and broadcast: see `signing.md`.
+Pass plain values by default; JSON-quote a single flag only if it errors with `unmarshalling json response body` (older versions). Read-only results you show directly; action results (unsigned tx / EIP-712) go to the user's wallet: Compass never signs. On **[MCP]** the user signs in the signing panel where their client shows one, and the hash or signature comes back as a user message; on the **[CLI]**, or with no panel, they sign by hand with `cast`. Both are in `signing.md`.
 
 ## Deposit into a yield venue
 Inputs the `manage`-style command needs: a **venue** (vault address, Aave token, or Pendle market — usually a nested `--venue.*` flag), an **action** (deposit/withdraw), an **amount**, the **owner**, the **chain**. Find a venue first via the vault/market listing command.
@@ -33,7 +33,7 @@ compass <earn-group> <bundle> --owner 0x<o> --chain base --actions '[
   {"body":{"action_type":"V2_SWAP","token_in":"USDC","token_out":"AUSD","amount_in":"100","slippage":"0.5"}},
   {"body":{"action_type":"V2_MANAGE","venue":{"type":"VAULT","vault_address":"0x<B>"},"action":"DEPOSIT","amount":"100"}}
 ]'
-# → ONE unsigned tx for the whole rebalance. There is no rebalance command; this bundle is the rebalance.
+# → ONE unsigned tx for the whole rebalance. Earn has no rebalance command; this bundle is the rebalance.
 ```
 
 ## Borrow / repay (credit)
@@ -44,7 +44,7 @@ Open a leveraged position in ONE tx: the loop command supplies your initial coll
 
 - **Protocol.** The same loop/unloop commands cover Aave (default), Morpho (needs the market's `market-id`), and Euler. Euler positions are keyed by an **EVK vault pair** (a collateral vault + a borrow vault, from the euler-markets listing) plus an optional **sub-account** id (0–255) that isolates each position with its own health — pass those extra flags only for Euler. Confirm the exact flag names via `--help`.
 - **Sizing.** Give the initial collateral amount (already in the account) plus a target: a **multiplier** (total exposure = multiplier × initial) and/or a per-iteration **loan-to-value** expressed **in percent** and kept under the market's max borrow LTV. The response `preview` reports the achieved multiplier, projected LTV, and health factor before you sign.
-- **Embedded swap → broadcast promptly.** Every iteration swaps the borrowed token back to collateral at a *live* quote, so the returned tx carries a min-out that goes stale within seconds. Broadcast right after building, and give the swap room with a max-slippage of ~1% — a tight 0.5% often misses min-out and reverts the whole atomic tx.
+- **Embedded swap → broadcast promptly.** Every iteration swaps the borrowed token back to collateral at a *live* quote, so the returned tx carries a min-out that goes stale within seconds. Broadcast right after building (on **[MCP]**, tell the user to sign in the panel straight away), and give the swap room with a max-slippage of ~1% — a tight 0.5% often misses min-out and reverts the whole atomic tx.
 - **Closing (unloop).** Omit the target-multiplier for a **full unwind** — debt is cleared exactly (accrued interest included) and all pair collateral is withdrawn back to the account; pass `1` to clear debt but leave collateral supplied, or a value `>1` to delever partway. A near-liquidation position that can't unwind in one tx takes an allow-partial flag, then a second unloop from lower leverage.
 - **Reading it back.** Open loops show in the credit **positions** command (Euler reports per-sub-account health). The dedicated **looped-positions** command is Aave/Morpho-only — an Euler loop returns `[]` there, so read Euler leverage from positions instead.
 
@@ -56,21 +56,24 @@ compass <credit-group> loop --owner 0x<o> --chain base --collateral-token USDC -
 compass <credit-group> unloop --owner 0x<o> --chain base --collateral-token USDC --borrow-token WETH \
   --max-slippage-percent 1            # omit target-multiplier → full close (Euler: same vault pair + sub-account)
 ```
-Each returns an unsigned tx → sign + broadcast with the user's key (see `signing.md`).
+Each returns an unsigned tx → the user signs and sends it (see `signing.md`). To move several open loops to new targets at once, credit also has a rebalance command: one atomic transaction for the whole set.
 
 ## Perps order — prepare → sign → execute
-One-time: enable the perps account, deposit USDC (and approve a builder fee if you'll use one). Then an order command (market/limit) **prepares** EIP-712 → user signs → submit via the perps **`execute`** command. Order inputs: owner, asset ticker (e.g. `AAPL`), side (`buy`/`sell`), size, optional slippage. Read-only: opportunities, positions, candles, activity.
+One-time: enable the perps account, deposit USDC (and approve a builder fee if you'll use one). Then an order command (market/limit) **prepares** EIP-712 → user signs → submit via the perps **`execute`** command. Perps typed data is signed **by hand on both backends**: the [MCP] signing panel does not cover it. Order inputs: owner, asset ticker (e.g. `AAPL`), side (`buy`/`sell`), size, optional slippage. Read-only: opportunities, positions, candles, activity.
 ```bash
 compass <perps-group> <market-order> --owner 0x<o> --asset AAPL --side buy --size 10 --slippage-percent 1
 # user signs the returned EIP-712, then:
 compass <perps-group> execute --action '<from prepare>' --nonce <n> --signature 0x<sig>
 ```
 
-## Tokenized equity order — quote → order → sign → submit
-Quote (read-only) → order (returns an order message + hash) → user signs off-chain → submit via the order-submit command. Track via order-status; cancel via the cancel command. Prereq: create the account once.
+## Tokenized assets: two trade flows, chosen by the market's asset class
+Read the market's `asset_class` from the markets listing first; crossing the flows returns a 422. Prereq for both: create the account once and move funds in with its transfer command.
+
+- **Equities (order flow): quote → order → sign → submit.** Quote (read-only) → order (returns an order message + hash) → user signs off-chain → submit via the order-submit command. Track via order-status; cancel via the cancel command. The order message is signed **by hand on both backends**: the [MCP] signing panel does not cover it.
+- **RWA yield tokens and money-market funds (swap flow): buy / sell.** One command each way returns a regular unsigned transaction, with no order lifecycle. On **[MCP]** that transaction gets the signing panel. A result with `settlement: "async"` settles later at the issuer: the tokens not arriving at once is not a failure.
 
 ## Gas-sponsored action (sponsor pays gas)
-Add the gas-sponsorship flag to an action to get EIP-712 instead of a tx → user signs → submit to the **gas-sponsorship prepare** command with the sponsor as sender → sponsor broadcasts and pays gas.
+Add the gas-sponsorship flag to an action to get EIP-712 instead of a tx → user signs → submit to the **gas-sponsorship prepare** command with the sponsor as sender → sponsor broadcasts and pays gas. On **[MCP]** with the signing panel, the user signs the typed data in the panel and the signature comes back as a user message; pass it with the same typed data to the prepare tool.
 
 ## Risk / portfolio analysis
 `compass risk-recipes` prints the formulas (LLTV cascade, jump-to-default, vault correlation, withdrawable share of TVL) with jq snippets. LLTV cascade is the one to get right: Morpho ships LLTV as a uint256 scaled by 1e18, and bad debt is continuous (`1 − 1/newLtv`), not a binary trip-flag.

@@ -20,7 +20,8 @@
 | Earn yield — deposit/withdraw in vaults (ERC‑4626 / Morpho), Aave, or Pendle; list markets; positions | **Earn / yield** | one `manage`-style command does deposit *and* withdraw across venue types, chosen via a nested `--venue.*` flag (vault / Aave / Pendle) |
 | Lend / borrow against collateral; repay | **Credit / lending** | |
 | Perpetual futures — open/close long-short, market/limit orders | **Perps** | group name has changed across versions — find it via `compass --help`. Orders are *prepare → sign → execute* |
-| Buy / sell tokenized equities (stocks) | **Tokenized equities** | group has been renamed across versions. *quote → order → sign → submit* |
+| Buy / sell tokenized assets: equities (stocks), RWA yield tokens, money-market funds | **Tokenized assets** | group has been renamed across versions. Two flows, chosen by the market's asset class: equities are *quote → order → sign → submit*; RWA yield tokens and money-market funds are a one-transaction *buy / sell* |
+| Bridge USDC between chains (CCTP) | **Bridging** | **[MCP]** the `v2_cctp_*` tools: burn on the source chain, mint on the destination. **[CLI]** check `compass --help` for a group; older builds have none |
 | Pay gas on the user's behalf (sponsor) | **Gas sponsorship** | |
 | Move tokens in/out of a product account, or swap within it | the per-product `transfer` / `swap` commands | |
 | Auth / who am I / configure | **auth**, `whoami`, `configure` (TUI) | |
@@ -31,13 +32,13 @@
 
 These hold regardless of exact names:
 
-**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-equities` each act through a per-product smart account (a Safe) that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual** — Compass returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Check on-chain deployment (`cast code <account-address>` → `0x` = not created); if undeployed, run the group's `create-account` + `transfer`, then act. One-time per owner per product per chain. **Perps (`global-markets-perps`) has no product account** — it trades on Hyperliquid: one-time `enable-unified-account` + `deposit` (not `create-account`).
+**Account prerequisites — check deployment, create if missing.** `credit`, `earn`, and `tokenized-assets` each act through a per-owner, per-chain **product account** that must be **deployed** (and, for credit/earn, funded) first. Its address is **deterministic/counterfactual**: Compass returns it even when nothing is deployed there, so don't read "an address came back" (or zero balances) as "it exists." Ask the group's `create-account`: it is idempotent and answers `transaction: null` when the account is already deployed (or check on-chain: `cast code <account-address>` → `0x` = not created). If undeployed, send that `create-account` transaction, fund with `transfer`, then act. One-time per owner per product per chain. **Perps (`perpetual-trading`) has no product account**: it trades on Hyperliquid, with a one-time `enable-unified-account` + `deposit` (not `create-account`).
 
-**Multi-action → one bundle.** For any goal needing more than one action (rebalance, move between vaults, swap-then-deposit), use the product's **bundle**-style command (takes an `--actions '[…]'` list) to combine them into a **single atomic transaction**. Don't chain separate signed txs. There is no `rebalance` command — a rebalance *is* a bundle. See `recipes.md`.
+**Multi-action → one bundle.** For any goal needing more than one action (rebalance, move between vaults, swap-then-deposit), use the product's **bundle**-style command (takes an `--actions '[…]'` list) to combine them into a **single atomic transaction**. Don't chain separate signed txs. Earn has no `rebalance` command: an earn rebalance *is* a bundle. (Credit's `rebalance` is for leveraged positions.) See `recipes.md`.
 
 **Prepare → sign → submit.** Some actions return EIP-712 / order data for the user to sign, then a second command submits the signature:
 - perps order commands → sign → the perps **`execute`** command
-- the equities **`order`** command → sign → its **order-submit** command
+- the tokenized assets **`order`** command (equities) → sign → its **order-submit** command
 - any action with the **gas-sponsorship** flag → sign → the **gas-sponsorship prepare** command
 
-**Read-only vs action.** List / markets / positions / balances / quote commands are read-only — show the result. Deposit / borrow / order / manage / bundle commands return an unsigned tx or EIP-712 → complete it with the user's key (`cast` — see `signing.md`); compass never signs.
+**Read-only vs action.** List / markets / positions / balances / quote commands are read-only — show the result. Deposit / borrow / order / manage / bundle commands return an unsigned tx or EIP-712 → the user completes it: on **[MCP]** in the signing panel where their client shows one, otherwise by hand with `cast` (both in `signing.md`). Compass never signs.

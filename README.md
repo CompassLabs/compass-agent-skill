@@ -2,9 +2,9 @@
 
 Do on-chain DeFi from your coding agent by delegating to the [Compass Labs](https://compasslabs.ai) DeFi API through the `compass` CLI or the hosted MCP server.
 
-Describe an action in plain English — _"supply USDC to Aave"_, _"find the best USDC vault on Base and deposit 100"_, _"open a 2x long on ETH"_, _"buy tokenized TSLA"_ — and the agent installs the CLI if needed, finds the right command, previews it, runs it, and hands any resulting transaction to your wallet to sign.
+Describe an action in plain English — _"supply USDC to Aave"_, _"find the best USDC vault on Base and deposit 100"_, _"open a 2x long on ETH"_, _"buy tokenized TSLA"_ — and the agent sets up a backend if needed, finds the right command or tool, previews it, runs it, and hands any resulting transaction to your wallet to sign.
 
-**Non-custodial:** the CLI returns unsigned transactions / EIP-712 typed data. It never holds your keys, signs, or broadcasts.
+**Non-custodial:** the CLI and the MCP tools return unsigned transactions / EIP-712 typed data. Compass never holds your keys, signs, or broadcasts.
 
 One skill, multiple agents — the content in `skills/compass/` is shared; each agent just has a thin manifest.
 
@@ -32,6 +32,8 @@ claude mcp add --transport http compass https://api.compasslabs.ai/mcp \
 
 Per-client setup (Cursor, Claude Desktop, any Streamable-HTTP client) is in the [MCP server docs](https://docs.compasslabs.ai/v2/Agents/MCP-Server). The same skill concepts apply; the agent calls the Compass tools natively instead of shelling out to the CLI.
 
+In clients that render MCP Apps views (Claude's chat apps, for example), tools that build a transaction also show a **signing panel**: you review the request and sign it with your own wallet in the browser, and the result goes back to the chat. Where there is no panel (terminal agents, the CLI), the skill walks you through signing with your own key instead.
+
 ## Use
 
 ```text
@@ -44,22 +46,22 @@ Or just describe a DeFi action in chat — the skill activates on DeFi intents.
 
 ```mermaid
 flowchart TD
-    A{"compass installed?"} -->|no| B["Confirm with user, then install"]
-    A -->|yes| C["Map intent → command<br/>(compass --usage / group --help)"]
+    A{"Backend ready?<br/>(CLI installed or MCP connected)"} -->|no| B["Set up a backend<br/>(install the CLI / add the MCP server)"]
+    A -->|yes| C["Map intent → command or tool<br/>(compass --usage / MCP tool schemas)"]
     B --> C
-    C --> D["Read the command's flags<br/>(--help or docs)"]
-    D --> E["credit / earn / equities?<br/>ensure account exists first"]
-    E --> F["Preview with --dry-run"]
+    C --> D["Read the params<br/>(--help flags / JSON schema)"]
+    D --> E["credit / earn / tokenized assets?<br/>ensure account exists first"]
+    E --> F["Preview<br/>(--dry-run / inspect the built transaction)"]
     F --> G["Execute"]
     G --> H{"Output is unsigned tx / EIP-712?"}
-    H -->|yes action| I["Sign with the user's key via cast<br/>(see Signing and hand-off)"]
+    H -->|yes action| I["You sign with your own wallet<br/>(MCP signing panel, else by hand)"]
     H -->|no read-only| J["Show the result"]
 ```
 
 ## Requirements
 
-- **A Compass API key:** `export COMPASS_API_KEY_AUTH=...` (get one at <https://compasslabs.ai/login>).
-- **The `compass` CLI:** the skill installs it on first use, or:
+- **A Compass API key** (get one at <https://compasslabs.ai/login>): `export COMPASS_API_KEY_AUTH=...` for the CLI, or the `X-API-Key` header for the MCP server.
+- **One backend.** The MCP server needs nothing installed (see above). For the `compass` CLI, the skill installs it on first use, or:
   ```bash
   curl -fsSL https://compasslabs.ai/install.sh | bash      # macOS / Linux
   iwr -useb https://compasslabs.ai/install.ps1 | iex       # Windows
@@ -78,8 +80,9 @@ flowchart TD
 - `skills/compass/` — the skill content, **single source of truth**.
 - `.claude-plugin/`, `.cursor-plugin/`, `.codex-plugin/` — per-agent manifests, all pointing at `skills/`.
 - `AGENTS.md`, `GEMINI.md` — generated universal-file representations of the skill (don't edit by hand).
+- `scripts/generate_agents_md.py` — regenerates those two files from `skills/compass/`. Run it after every edit to the skill; `--check` fails when they are stale.
 
-This repo is published from the Compass monorepo via `tools/compass-agent-skill/publish.sh`; edit the skill there, then re-publish.
+To release: edit `skills/compass/`, run the generator, bump `version` in the three plugin manifests and `.claude-plugin/marketplace.json`, commit and tag.
 
 ## Links
 

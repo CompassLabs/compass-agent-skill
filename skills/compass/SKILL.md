@@ -1,6 +1,6 @@
 ---
 name: compass
-description: Use when a user wants on-chain DeFi actions through Compass Labs — supply or borrow on Aave, earn yield in Morpho/ERC-4626 vaults, swap tokens, open perps, trade tokenized equities/stocks, or send gas-sponsored transactions on Ethereum, Arbitrum, or Base — or when they invoke /compass or mention the compass CLI or MCP server. Also use to install or set up the compass CLI or connect the Compass MCP server.
+description: Use when a user wants on-chain DeFi actions through Compass Labs — supply or borrow on Aave, earn yield in Morpho/ERC-4626 vaults, swap tokens, open perps, trade tokenized equities/stocks, or send gas-sponsored transactions on Ethereum, Base, Arbitrum and the other supported chains — or when they invoke /compass or mention the compass CLI or MCP server. Also use to install or set up the compass CLI or connect the Compass MCP server.
 ---
 
 # Compass — on-chain DeFi via the `compass` CLI or MCP server
@@ -9,16 +9,16 @@ description: Use when a user wants on-chain DeFi actions through Compass Labs �
 
 Compass Labs exposes a **non-custodial** DeFi API through two equally-supported surfaces: the **`compass` CLI** (a shell binary) and a **hosted MCP server** (native agent tools over one URL). Whichever you use, action commands/tools return an **unsigned transaction** (`{to, data, value, chainId}`) or **EIP-712 typed data** — Compass never holds keys, signs, or broadcasts.
 
-This skill is the "delegate to Compass" flow: set up whichever backend fits the client, translate the user's plain-English DeFi intent into the right command **or tool call**, preview it, run it, and hand any returned transaction to the user's wallet to sign. Everything below — the workflow, product-account rules, goal-bundling, and signing — is **identical on both backends**; only the surface differs (shell flags vs JSON params). Backend-specific mechanics are tagged **[CLI]** or **[MCP]**.
+This skill is the "delegate to Compass" flow: set up whichever backend fits the client, translate the user's plain-English DeFi intent into the right command **or tool call**, preview it, run it, and hand any returned transaction to the user's wallet to sign. The workflow, product-account rules and goal-bundling below are **identical on both backends**; the surface differs (shell flags vs JSON params), and so does the last step: an MCP client that shows the **signing panel** signs there, everything else signs by hand. Backend-specific mechanics are tagged **[CLI]** or **[MCP]**.
 
 ## Two ways to use Compass — CLI or MCP
 
-Compass is reachable two ways, and the **concepts** in this skill — create the product account first, prepare→sign→submit, bundle multi-step goals, sign with the user's own key — apply to **both**. **Let the user pick which one to use:**
+Compass is reachable two ways, and the **concepts** in this skill — create the product account first, prepare→sign→submit, bundle multi-step goals, sign with the user's own wallet or key — apply to **both**. **Let the user pick which one to use:**
 
 - **CLI.** Install the `compass` binary and drive it from a shell — any shell-capable agent, with `--dry-run`, `--jq`, `-o toon`, and full flag control. See "Setup" below.
 - **Hosted MCP server.** If the client speaks MCP (Claude Code/Desktop, Cursor, …), connect the Compass MCP server at `https://api.compasslabs.ai/mcp` — no binary to install; the Compass tools appear natively and take JSON arguments. Auth is the same Compass API key as the CLI, sent as an `X-API-Key` header — e.g. for Claude Code: `claude mcp add --transport http compass https://api.compasslabs.ai/mcp --header "X-API-Key: YOUR_API_KEY"`; setup for other clients: <https://docs.compasslabs.ai/v2/Agents/MCP-Server>. On connect the server returns its own instructions, and each tool ships a schema — those, not this skill, are the source of truth for MCP tool names and arguments.
 
-**Ask the user which backend to use** the first time you act on a Compass request, then use that for the rest of the session — don't re-ask per command. Only ask when both are genuinely available; if only one is set up (CLI installed, or MCP tools connected), just use that one and mention the other exists. **If the user would rather not be asked** (e.g. "just do it", "don't ask me"), skip the question — default to the MCP tools when connected, else the CLI — do the action, and tell them which you used (they can switch anytime). The CLI-only mechanics here — `--dry-run`, `--jq`, `-o toon`, nested `--a.b.c` flags — don't apply on the MCP path (you pass JSON params and read JSON back), but either way you get back an **unsigned tx / EIP-712 to sign with the user's own key** (see "Signing & hand-off"), and neither the CLI nor the server holds keys.
+**Ask the user which backend to use** the first time you act on a Compass request, then use that for the rest of the session — don't re-ask per command. Only ask when both are genuinely available; if only one is set up (CLI installed, or MCP tools connected), just use that one and mention the other exists. **If the user would rather not be asked** (e.g. "just do it", "don't ask me"), skip the question — default to the MCP tools when connected, else the CLI — do the action, and tell them which you used (they can switch anytime). The CLI-only mechanics here — `--dry-run`, `--jq`, `-o toon`, nested `--a.b.c` flags — don't apply on the MCP path (you pass JSON params and read JSON back), but either way you get back an **unsigned tx / EIP-712 that the user signs themselves** (see "Signing & hand-off": in the signing panel on MCP clients that show it, by hand otherwise), and neither the CLI nor the server holds keys.
 
 ## When to use
 
@@ -35,22 +35,22 @@ digraph compass_flow {
     "Set up a backend\n(install CLI / add MCP server)" [shape=box];
     "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" [shape=box];
     "Read the params\n([CLI] --help flags  [MCP] JSON schema)" [shape=box];
-    "credit/earn/equities?\nensure account exists first" [shape=box];
+    "credit/earn/tokenized assets?\nensure account exists first" [shape=box];
     "Preview\n([CLI] --dry-run  [MCP] inspect built tx)" [shape=box];
     "Execute" [shape=box];
     "Output is unsigned tx / EIP-712?" [shape=diamond];
-    "Sign with the user's key\n(see Signing & hand-off)" [shape=box];
+    "User signs\n([MCP] signing panel, else by hand)" [shape=box];
     "Show the result" [shape=box];
 
     "Backend ready?\n(CLI installed or MCP connected)" -> "Set up a backend\n(install CLI / add MCP server)" [label="no"];
     "Backend ready?\n(CLI installed or MCP connected)" -> "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" [label="yes"];
     "Set up a backend\n(install CLI / add MCP server)" -> "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)";
     "Map intent -> command / tool\n([CLI] --usage/--help  [MCP] tool schemas)" -> "Read the params\n([CLI] --help flags  [MCP] JSON schema)";
-    "Read the params\n([CLI] --help flags  [MCP] JSON schema)" -> "credit/earn/equities?\nensure account exists first";
-    "credit/earn/equities?\nensure account exists first" -> "Preview\n([CLI] --dry-run  [MCP] inspect built tx)";
+    "Read the params\n([CLI] --help flags  [MCP] JSON schema)" -> "credit/earn/tokenized assets?\nensure account exists first";
+    "credit/earn/tokenized assets?\nensure account exists first" -> "Preview\n([CLI] --dry-run  [MCP] inspect built tx)";
     "Preview\n([CLI] --dry-run  [MCP] inspect built tx)" -> "Execute";
     "Execute" -> "Output is unsigned tx / EIP-712?";
-    "Output is unsigned tx / EIP-712?" -> "Sign with the user's key\n(see Signing & hand-off)" [label="yes (action)"];
+    "Output is unsigned tx / EIP-712?" -> "User signs\n([MCP] signing panel, else by hand)" [label="yes (action)"];
     "Output is unsigned tx / EIP-712?" -> "Show the result" [label="no (read-only)"];
 }
 ```
@@ -66,26 +66,26 @@ digraph compass_flow {
    Prefer the **single highest-level command/tool** (or one `bundle`) that achieves the user's whole goal — see "Delegate the whole goal" below.
 
 **2. Read the params before composing.** **Never infer names from the endpoint or API URL** — the #1 cause of failed first runs on either backend.
-   - **[CLI]** `compass <group> <command> --help` (or in the mono repo `cli-sdk/docs/compass_<group>_<command>.md`). Flags are often **nested**: `--venue.vault.vault-address`, not `--vault-address`.
+   - **[CLI]** `compass <group> <command> --help` (per-command pages are also at <https://github.com/CompassLabs/cli/tree/main/docs>). Flags are often **nested**: `--venue.vault.vault-address`, not `--vault-address`.
    - **[MCP]** the tool's JSON schema. Objects nest the same way: `"venue": {"type":"VAULT","vault_address":"0x…"}`.
 
 **3. Preview before you spend a call.**
    - **[CLI]** `--dry-run` prints the exact request (URL, headers, body) to stderr without calling the API.
-   - **[MCP]** there's no dry-run, but action tools **return the unsigned tx / EIP-712 without broadcasting** — inspect what came back and confirm it matches intent before signing. Same safety, different mechanism.
+   - **[MCP]** there's no dry-run, but action tools **return the unsigned tx / EIP-712 without broadcasting** — inspect what came back and confirm it matches intent before the user signs. Same safety, different mechanism.
 
-**4. Execute, then sign.** Run the command/tool. Read-only results (markets, positions, balances) you show or summarize directly. If the result is **unsigned** — a transaction or EIP-712 typed data — complete it with the **user's own key**; see **Signing & hand-off** below. Compass never signs or broadcasts, on either backend.
+**4. Execute, then sign.** Run the command/tool. Read-only results (markets, positions, balances) you show or summarize directly. If the result is **unsigned** — a transaction or EIP-712 typed data — the **user** completes it: on **[MCP]** in the signing panel where the client shows one, otherwise by hand with their own key. See **Signing & hand-off** below. Compass never signs or broadcasts, on either backend.
 
 ## Account-based products — ensure the account exists first
 
-`credit`, `earn`, and `tokenized-equities` each act through a per-product **smart account** (a Safe) owned by the user. That account must exist (and, for credit/earn, be funded) before the main action, or it fails. So **before any credit / earn / equities action**:
+`credit`, `earn`, and `tokenized-assets` each act through a per-owner, per-chain **product account**. That account must exist (and, for credit/earn, be funded) before the main action, or it fails. So **before any credit / earn / tokenized-assets action**:
 
-1. **Check whether it's deployed on-chain.** These accounts have a **deterministic (counterfactual) address the CLI returns even when nothing is deployed there** — so an address in the output (or a `balances` result) does *not* prove the account exists. Verify deployment: `cast code <account-address> --rpc-url "$RPC_URL"` → empty (`0x`) means it isn't created yet.
-2. **If not deployed, create it** — run the group's `create-account`, then fund it via the group's `transfer` where the group has one.
+1. **Check whether it's deployed.** These accounts have a **deterministic (counterfactual) address that Compass returns even when nothing is deployed there**, so an address in the output (or a `balances` result) does *not* prove the account exists. Ask the group's `create-account` (**[MCP]** the product's `*_create_account` tool): it is idempotent and answers **`transaction: null` when the account is already deployed**. A transaction in the answer means it is not created yet. With a shell and an RPC you can also check on-chain: `cast code <account-address> --rpc-url "$RPC_URL"` → empty (`0x`) means not deployed.
+2. **If not deployed, create it.** Have the user sign and send that `create-account` transaction, then fund the account via the group's `transfer` where the group has one.
 3. **Then** run the action.
 
-One-time per owner per product per chain — skip if it's already deployed. ⚠️ Never equate "the CLI returned an `…_account_address`" with "the account exists": that address is predicted from the owner and returned regardless of deployment (it can even hold pre-funded tokens while undeployed). Confirm exact command names via `--help`; pure read-only commands (markets, quotes, positions) need no account.
+One-time per owner per product per chain; skip it if the account is already deployed. ⚠️ Never equate "Compass returned an `…_account_address`" with "the account exists": that address is predicted from the owner and returned regardless of deployment (it can even hold pre-funded tokens while undeployed). Confirm exact command names via `--help`; pure read-only commands (markets, quotes, positions) need no account.
 
-**Perps (`global-markets-perps`) is different — no product account.** It trades on Hyperliquid, so its one-time setup is `enable-unified-account` + `deposit` USDC (plus `approve-builder-fee` / `ensure-leverage` if needed) — not a `create-account`. See the perps recipe in `references/recipes.md`.
+**Perps (`perpetual-trading`) is different: no product account.** It trades on Hyperliquid, so its one-time setup is `enable-unified-account` + `deposit` USDC (plus `approve-builder-fee` / `ensure-leverage` if needed), not a `create-account`. See the perps recipe in `references/recipes.md`.
 
 ## Delegate the whole goal — one command, one transaction
 
@@ -95,23 +95,54 @@ Compass is for *delegating execution*, not hand-orchestrating low-level steps. M
 - Goal needs several actions (rebalance a portfolio, move funds between vaults, swap-then-deposit) → combine them into **one bundle** (each product exposes a `bundle`-style command — confirm its exact name via `--help`): a single atomic, all-or-nothing transaction the user signs **once**.
 - **Anti-pattern — do NOT do this:** a chain of separate signed transactions — withdraw (sign) → swap (sign) → deposit (sign) — when one `bundle` does it in a single signature. "Rebalance across 3 vaults" is **one** bundle tx, not ~20 transactions.
 
-Why: one signature, atomic execution (no half-done state if a later step fails), far less gas. **There is no `rebalance` command** — a rebalance *is* a `bundle` of withdraw/swap/deposit actions (see `references/recipes.md` recipe 2). If unsure a single command exists, check `compass --usage` before falling back to multiple steps.
+Why: one signature, atomic execution (no half-done state if a later step fails), far less gas. **Earn has no `rebalance` command**: an earn rebalance *is* a `bundle` of withdraw/swap/deposit actions (see `references/recipes.md` recipe 2). Credit does have one, for a different job: it moves leveraged (looped) positions to a target state in one transaction. If unsure a single command exists, check `compass --usage` before falling back to multiple steps.
 
 ## Signing & hand-off — completing an action
 
-Action commands **and MCP action tools** both return something **unsigned** — Compass never signs, holds keys, or broadcasts on either surface. Complete it with the **user's own key** via [`cast`](https://book.getfoundry.sh/cast/) — full guide in `references/signing.md`. The two cases are the same whichever backend produced the payload:
+Action commands **and MCP action tools** both return something **unsigned**: Compass never signs, holds keys, or broadcasts on either surface. The **user** completes it with their own wallet or key. Which way depends on where you are:
 
-- **Unsigned transaction** `{to, data, value, chainId}` (deposit, borrow, manage, bundle…) → sign + broadcast. Pass the `data` hex in the `[SIG]` slot — `cast` takes raw calldata there:
+| Where you are | What came back | How the user signs |
+|---------------|----------------|--------------------|
+| **[MCP]**, the client shows the signing panel | `transaction` or `eip_712` | **In the panel**, with their own wallet. This is the default on MCP |
+| **[MCP]**, perps or a tokenized equity order | Hyperliquid `typed_data`, an order message | By hand: the panel does not cover these payloads |
+| **[MCP]**, the user says there is no panel | anything | By hand |
+| **[CLI]** | anything | By hand |
+
+### [MCP] The signing panel (default on MCP)
+
+On clients that render MCP Apps views (Claude's chat apps, for example), every tool whose result has a `transaction` or an `eip_712` also shows the user a **signing panel** next to that result. It opens a Compass signing page in their browser, where they review the request and sign it with their own wallet. The server's on-connect instructions have a "SIGNING PANEL" paragraph when it is on; that paragraph is the source of truth.
+
+You do not touch the payload:
+
+1. **Call the tool**, then tell the user in a line or two what the request does (action, amount, token, chain, owner) and that the panel is waiting for them.
+2. **Wait.** The outcome arrives as a **user message**: a transaction hash, or a signer and a signature.
+3. **A hash means the transaction was sent, not that it succeeded.** Continue the flow from it, and confirm with a positions or balances read before relying on it.
+4. **A signature** (the gas-sponsored `eip_712` path) goes, together with the same typed data, to the gas-sponsorship prepare tool. That tool returns the transaction a sponsor sends, with a panel of its own.
+
+Rules:
+
+- **Do not ask the user to sign by hand, and do not print `cast` commands, unless they tell you the panel is missing.** Terminal agents do not render it; then use the by-hand path below.
+- **Never retype, rebuild or "fix" a payload.** The panel signs only what the server built. To change anything, call the tool again with different arguments.
+- **A signing request expires 15 minutes after it is built.** If the user reports an expired or unavailable link, call the tool again.
+- **One dependent step at a time**: wait for the outcome of create-account before funding, and of funding before acting.
+- **`transaction: null`** (the account already exists) leaves nothing to sign. Move on.
+- **Smart-contract wallets** may send the transaction in a form the page cannot match to the request. The user then pastes the hash into the chat; treat it like any other hash.
+
+### By hand ([CLI], and [MCP] where there is no panel)
+
+Sign with the user's own key via [`cast`](https://book.getfoundry.sh/cast/); full guide in `references/signing.md`. Two cases:
+
+- **Unsigned transaction** `{to, data, value, chainId}` (deposit, borrow, manage, bundle…) → sign + broadcast. Pass the `data` hex in the `[SIG]` slot; `cast` takes raw calldata there:
   ```bash
   cast send <to> <data> --value <value> --rpc-url "$RPC_URL" --account <keystore>
   ```
-  Default to **sign-only** (`cast mktx` → hand back the signed tx, or `cast publish` it) and **broadcast only after the user confirms** — it spends funds irreversibly.
-- **EIP-712 typed data** (perps/equities orders, gas-sponsorship) → sign off-chain, feed the signature to the **second** compass command/tool (e.g. the perps `…_execute` or tokenized `…_order_submit` tool on MCP):
+  Default to **sign-only** (`cast mktx` → hand back the signed tx, or `cast publish` it) and **broadcast only after the user confirms**: it spends funds irreversibly.
+- **EIP-712 typed data** (perps and tokenized equity orders, gas sponsorship) → sign off-chain, feed the signature to the **second** compass command/tool (e.g. the perps `…_execute` or tokenized `…_order_submit` tool on MCP):
   ```bash
   cast wallet sign --data --from-file td.json --account <keystore>    # → 0x<sig>, then: compass … execute --signature 0x<sig>
   ```
 
-**Keys stay with the user:** sign from an encrypted keystore (`cast wallet import <name>`) or `--ledger`/`--trezor` — never `--private-key` inline (it leaks to shell history and `ps`).
+**Keys stay with the user:** sign from an encrypted keystore (`cast wallet import <name>`) or `--ledger`/`--trezor`, never `--private-key` inline (it leaks to shell history and `ps`).
 
 ## Setup (do once) — pick a backend
 
@@ -126,14 +157,14 @@ claude mcp add --transport http compass https://api.compasslabs.ai/mcp \
   --header "X-API-Key: YOUR_API_KEY"
 ```
 
-Per-client setup (Cursor, Claude Desktop, any Streamable-HTTP client): <https://docs.compasslabs.ai/v2/Agents/MCP-Server>. On connect the server returns its own usage instructions and each tool ships a schema — **those are the source of truth for MCP tool names/args**, not this skill. If the tools are already connected there's nothing to do; a `401` means the `X-API-Key` header is missing or wrong.
+Per-client setup (Cursor, Claude Desktop, any Streamable-HTTP client): <https://docs.compasslabs.ai/v2/Agents/MCP-Server>. On connect the server returns its own usage instructions and each tool ships a schema — **those are the source of truth for MCP tool names/args**, not this skill. Clients that render MCP Apps views also get the **signing panel** (see "Signing & hand-off"); nothing extra to set up. If the tools are already connected there's nothing to do; a `401` means the `X-API-Key` header is missing or wrong.
 
 ### [CLI] Install the binary
 
 Check first: `compass version`. If it's missing, **tell the user the exact command and confirm before running it** (install modifies their system):
 
 - **Homebrew (macOS / Linux, if `brew` is available):** `brew install compasslabs/tap/compass` — non-interactive; update later with `brew upgrade compass`.
-- **In the mono repo:** use the local `cli-sdk/compass` binary directly, or `go install github.com/CompassLabs/cli/cmd/compass@latest`.
+- **Go:** `go install github.com/CompassLabs/cli/cmd/compass@latest`.
 - **Standalone (recommended for agents — non-interactive):**
   ```bash
   curl -fsSL https://compasslabs.ai/install.sh | bash      # macOS / Linux
@@ -158,7 +189,7 @@ export COMPASS_API_KEY_AUTH=ck_...   # note the _AUTH suffix — NOT COMPASS_API
 compass whoami                        # verify auth + connectivity
 ```
 
-Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-mode (structured errors + default TOON output) auto-enables when `CLAUDE_CODE` / `CURSOR_AGENT` is detected; no flag needed.
+Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-mode (structured errors + default TOON output) auto-enables when a known agent environment (`CLAUDECODE`, `CURSOR_AGENT`, …) is detected; no flag needed.
 
 ## Critical rules — internalize before composing any command
 
@@ -167,8 +198,8 @@ Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-m
 | Rule | Why it matters |
 |------|----------------|
 | A Compass API key is required | **[CLI]** env var `COMPASS_API_KEY_AUTH` (the `_AUTH` suffix matters — plain `COMPASS_API_KEY` is silently ignored). **[MCP]** the `X-API-Key` header on the server registration. Either way, missing/wrong → 401 |
-| Compass never signs / holds keys / broadcasts | Action output is unsigned (tx / EIP-712) → complete it with the user's key via `cast` (see "Signing & hand-off"); broadcast only after the user confirms |
-| Product account first (credit / earn / equities) | The account has a deterministic address Compass returns **even when undeployed** — check it's actually deployed (`cast code <addr>` → `0x` = not created), don't just trust that an address came back; if undeployed, `create-account` + fund, then act. **Perps has no product account** — one-time `enable-unified-account` + `deposit` |
+| Compass never signs / holds keys / broadcasts | Action output is unsigned (tx / EIP-712) → the user completes it: **[MCP]** in the signing panel where the client shows one, otherwise by hand with `cast` (see "Signing & hand-off"). By hand, broadcast only after the user confirms |
+| Product account first (credit / earn / tokenized assets) | The account has a deterministic address Compass returns **even when undeployed**, so an address coming back proves nothing. Ask `create-account`: `transaction: null` = already deployed, a transaction = create it (then fund, then act). **Perps has no product account**: one-time `enable-unified-account` + `deposit` |
 | Amounts are decimal token units | `"1.5"` = 1.5 USDC, never wei; `"ALL"` is unsupported — pass an explicit amount |
 | Surface `4xx` bodies to the user | They're actionable (`Unknown token symbol`, `Slippage exceeded — raise slippage`, …); a `5xx` is safe to retry once |
 
@@ -189,6 +220,8 @@ Do **not** run `compass configure` non-interactively — it opens a TUI. Agent-m
 |------|----------------|
 | Scope big **read** tools — some return very large payloads | Unfiltered list/balance reads (e.g. the full tokenized-assets market list, or credit/earn balances on a spam-airdropped account) can exceed the client's tool-result token cap. Pass the tool's filters (`limit`/`offset`, `provider`, `chain`, `asset_symbol`, `search`) — don't fetch the whole catalog to read one row |
 | Tool schemas + on-connect instructions are the source of truth | They mirror the live API — follow them over any tool name written in this skill |
+| Signing panel first | Where the client shows it, the user signs `transaction` / `eip_712` results in the panel and the outcome comes back as a user message. Do not ask for a by-hand signature unless the user says the panel is missing |
+| A hash from the panel means sent, not succeeded | The transaction can still be pending or revert → confirm with a positions or balances read before the next dependent step |
 
 Full error-recovery table: `references/error-recovery.md`. Worked end-to-end recipes: `references/recipes.md`. Signing & broadcasting: `references/signing.md`.
 
