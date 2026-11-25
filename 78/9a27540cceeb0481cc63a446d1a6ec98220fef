@@ -1,0 +1,45 @@
+skills/compass/references/signing.md
+  s_659b248ec3ac65::t_f39b9acb7eb452 3,5-43,49,53-54,56,58,60,67,75,77,88,90,92,94
+.claude-plugin/marketplace.json
+  s_659b248ec3ac65::t_2ea3e46ac9b4cf 12-13
+.claude-plugin/plugin.json
+  s_659b248ec3ac65::t_94a6e1e24beda0 3-4
+.codex-plugin/plugin.json
+  s_659b248ec3ac65::t_2a955df0d7d2a7 3,29
+.cursor-plugin/plugin.json
+  s_659b248ec3ac65::t_58b23e98873066 5
+AGENTS.md
+  s_659b248ec3ac65::t_bfd2a9c185cdeb 8,12,17,34,38,45-46,49,65,70,72,76,78-79,82,84,94,98,100-131,135-136,141,156,163,188,197-198,219-220,264-265,276,278,282,285,336-341,362,365,384,395,407,410,417-421,424,436-474,476,482,486-487,489,491,493,500,508,510,521,523,525,527
+GEMINI.md
+  s_659b248ec3ac65::t_764ba3e020fabe 8,12,17,34,38,45-46,49,65,70,72,76,78-79,82,84,94,98,100-131,135-136,141,156,163,188,197-198,219-220,264-265,276,278,282,285,336-341,362,365,384,395,407,410,417-421,424,436-474,476,482,486-487,489,491,493,500,508,510,521,523,525,527
+README.md
+  s_659b248ec3ac65::t_9848e5c69a0cc6 5,7,35-36,49-50,52-54,57,63-64,83,85
+scripts/generate_agents_md.py
+  s_659b248ec3ac65::t_894155ead1c542 1-63
+skills/compass/SKILL.md
+  s_659b248ec3ac65::t_ffd0fe3e562e45 3,12,16,21,38,42,49-50,53,69,74,76,80,82-83,86,88,98,102,104-135,139-140,145,160,167,192,201-202,223-224
+skills/compass/references/command-catalog.md
+  s_659b248ec3ac65::t_dcb8b23b5b4f5b 23-24,35,37,41,44
+skills/compass/references/error-recovery.md
+  s_659b248ec3ac65::t_8501c8844ca59d 45-50
+skills/compass/references/recipes.md
+  s_659b248ec3ac65::t_ddafddfc0be8e5 14,17,36,47,59,62,69-73,76
+skills/compass/workflow.excalidraw
+  s_659b248ec3ac65::t_c99e5cb13fc17f 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "789a27540cceeb0481cc63a446d1a6ec98220fef",
+  "prompts": {},
+  "sessions": {
+    "s_659b248ec3ac65": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "54d9a3a9-64d0-4f18-ac6d-2735effe77c5",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "bekanay <beka@compasslabs.ai>"
+    }
+  }
+}
